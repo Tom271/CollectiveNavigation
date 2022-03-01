@@ -4,7 +4,7 @@ const kappa_CDF, kappa_input = load_kappa_CDF();
 # Create default config
 # List of parameters to vary over as input to run_experiment
 config = SimulationConfig(
-    num_repeats = 3,
+    num_repeats = 10,
     flow = Dict(
         "type"=>"constant",
         "strength"=>0.0),
@@ -17,9 +17,25 @@ config = SimulationConfig(
 parse_config!(config)
 # df = run_realisation(config; save_output=true)
 # all_data = run_many_realisations(config)
-all_data = run_experiment(config,:flow, :sensing)
+all_data = run_experiment(
+    config,
+    :flow,
+    :sensing;
+    flow_values = 0.0:0.1:0.6,
+    sensing_values = [0.0, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 500.0]
+)
+
+plot_stopping_time_heatmap_v2(all_data, :individuals_remaining_mean, :flow, :sensing);
+plot_stopping_time_heatmap_v2(all_data, :num_neighbours, :flow, :sensing);
+plot_stopping_time_heatmap_v2(all_data, :average_dist_to_goal_mean, :flow, :sensing);
+
 # Use df to plot stats + results.
+
+
+
 using DelimitedFiles
+# Animate a file 
+# Need to add way to search through configs for desired params. 
 config = all_data[1,:lw_config]
 positions = readdlm(joinpath(config.save_dir, config.save_name*".tsv"));
 fig, ax, s = scatter(
