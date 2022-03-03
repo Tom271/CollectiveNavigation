@@ -153,9 +153,6 @@ function run_realisation(config::SimulationConfig; save_output::Bool = false)
                 kappa_CDF,
                 kappa_input,
             )
-            if κ > 1000
-                println(κ)
-            end
             κ = κ > 1000 ? 1000 : κ
             updated_heading = mod(rand(rng, VonMises(ϕ, κ)), 2π)
         end
