@@ -2,17 +2,17 @@
 function circ_resultant(samples::Vector{Float64}, weights::Vector{Float64})::Float64
     R = sum(weights .* exp.(im .* samples))
     R = abs(R) ./ sum(weights)
-return R
+    return R
 end
 
 function circ_resultant(samples::Vector{Float64})::Float64
     R = sum(exp.(im .* samples))
     R = abs(R) ./ length(samples)
-return R
+    return R
 end
 
 function mardia_jupp_κ_mle(headings::Vector{Float64}, weights::Vector{Float64})::Float64
-    headings = headings[:];
+    headings = headings[:]
     N = length(headings)
     if N > 1
         R = circ_resultant(headings, weights)
@@ -31,7 +31,7 @@ function mardia_jupp_κ_mle(headings::Vector{Float64}, weights::Vector{Float64})
 end
 
 function mardia_jupp_κ_mle(headings::Vector{Float64})::Float64
-    headings = headings[:];
+    headings = headings[:]
     N = length(headings)
     if N > 1
         R = circ_resultant(headings)
@@ -50,35 +50,41 @@ function mardia_jupp_κ_mle(headings::Vector{Float64})::Float64
 end
 
 
-function load_kappa_CDF()::Tuple{Array{Float64,3}, Matrix{Float64}}
-    lookup_table = jldopen(joinpath(dirname(pathof(CollectiveMigration)), "kappaCDFLookupTable.jld2"));
-    kappa_CDF = lookup_table["kappa_CDF"];
-    kappa_input = lookup_table["kappa_input"];
-    lookup_table = nothing;
+function load_kappa_CDF()::Tuple{Array{Float64,3},Matrix{Float64}}
+    lookup_table =
+        jldopen(joinpath(dirname(pathof(CollectiveMigration)), "kappaCDFLookupTable.jld2"))
+    kappa_CDF = lookup_table["kappa_CDF"]
+    kappa_input = lookup_table["kappa_input"]
+    lookup_table = nothing
     return kappa_CDF, kappa_input
 end
 
-function get_kappa(headings::Vector{Float64}, weights::Vector{Float64}, kappa_CDF, kappa_input)::Float64
-    κ = mardia_jupp_κ_mle(headings,weights)
+function get_kappa(
+    headings::Vector{Float64},
+    weights::Vector{Float64},
+    kappa_CDF,
+    kappa_input,
+)::Float64
+    κ = mardia_jupp_κ_mle(headings, weights)
     N = length(headings)
     if κ < 25 && N < 25
-        kappa_lookup_index =  round(Int64, κ*20) + 1 # equivalent to line below
+        kappa_lookup_index = round(Int64, κ * 20) + 1 # equivalent to line below
         # _, kappa_lookup_index = findmin(abs.(κ - kappa_input))
         cdf_sample = rand()
-        temp = findfirst(x -> cdf_sample < x, kappa_CDF[:, N - 1, kappa_lookup_index])
+        temp = findfirst(x -> cdf_sample < x, kappa_CDF[:, N-1, kappa_lookup_index])
         κ = kappa_input[temp] + rand() * (kappa_input[2] - kappa_input[1])
     end
-    return  κ
+    return κ
 end
 
 function get_kappa(headings::Vector{Float64}, kappa_CDF, kappa_input)
     κ = mardia_jupp_κ_mle(headings)
     N = length(headings)
     if κ < 25 && N < 25
-        kappa_lookup_index =  round(Int64, κ*20) + 1 # equivalent to line below
+        kappa_lookup_index = round(Int64, κ * 20) + 1 # equivalent to line below
         # _, kappa_lookup_index = findmin(abs.(κ - kappa_input))
         cdf_sample = rand()
-        temp = findfirst(x -> cdf_sample < x, kappa_CDF[:, N - 1, kappa_lookup_index[2]])
+        temp = findfirst(x -> cdf_sample < x, kappa_CDF[:, N-1, kappa_lookup_index[2]])
         κ = kappa_input[temp] + rand() * (kappa_input[2] - kappa_input[1])
     end
     return (κ > 1000) ? 1000 : κ
