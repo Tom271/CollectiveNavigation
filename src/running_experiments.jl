@@ -36,7 +36,7 @@ function run_experiment(
             sense_dict["range"] = sensing_value
             setproperty!(config, sensing, sense_dict)
             # safe save not necessary as realisations are averaged over
-            file, path = produce_or_load(datadir(), config, run_many_realisations)
+            file, path = produce_or_load(datadir(), config, run_many_realisations;verbose=false)
             if flow_value == flow_values[1] && sensing_value == sensing_values[1]
                 df = DataFrame(file)
             else
