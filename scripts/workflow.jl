@@ -19,7 +19,7 @@ all_data = run_experiment(
     :flow,
     :sensing;
     flow_values = 0.0:0.1:0.6,
-    sensing_values = [0.0, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 500.0],
+    sensing_values = Int64.([0.0, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 500.0]),
 )
 
 plot_stopping_time_heatmap_v2(all_data, :individuals_remaining_mean, :flow, :sensing);
