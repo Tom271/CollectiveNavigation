@@ -9,6 +9,7 @@ config = SimulationConfig(
     flow = Dict("type" => "constant", "strength" => 0.0),
     sensing = Dict("type" => "nearest", "range" => 0),
     kappa_CDF = kappa_CDF,
+    terminal_time = 5000,
     kappa_input = kappa_input,
 );
 parse_config!(config);
