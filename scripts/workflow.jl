@@ -7,7 +7,7 @@ const kappa_CDF, kappa_input = load_kappa_CDF();
 config = SimulationConfig(
     num_repeats = 2,
     flow = Dict("type" => "constant", "strength" => 0.0),
-    sensing = Dict("type" => "ranged", "range" => 0.0),
+    sensing = Dict("type" => "nearest", "range" => 0),
     kappa_CDF = kappa_CDF,
     kappa_input = kappa_input,
 );
@@ -45,7 +45,7 @@ lines!(
 )
 lines(
     avg_df[!, :coarse_time],
-    avg_df[!, :average_dist_to_goal_mean] ./ avg_df[1, :average_dist_to_goal_mean],
+    avg_df[!, :average_dist_to_goal_mean] ,
 )
 lines!(
     avg_df[!, :coarse_time],

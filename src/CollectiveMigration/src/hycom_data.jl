@@ -2,7 +2,6 @@
 # Will output latitude, longitude, water velocity in u and v, and times.
 #```
 function load_sea_data(filepath::String)
-
     sea = matread(filepath)
     for i in keys(sea)
         println(i)

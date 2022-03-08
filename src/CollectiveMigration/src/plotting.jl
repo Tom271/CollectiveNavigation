@@ -3,7 +3,7 @@ function plot_stopping_time_heatmap_v2(results, stat, x_param, y_param)
     ylabels = Float64[]
     stopping_times = Union{Float64,Missing}[]
     function stopping_time_index(row)
-        idx = findfirst(x -> x <= 0.2 * row[1], row)
+        idx = findfirst(x -> x <= 0.99 * row[1], row)
         return isnothing(idx) ? missing : idx
     end
     # Iterate through results, calculate stopping time for stat and store
@@ -11,7 +11,6 @@ function plot_stopping_time_heatmap_v2(results, stat, x_param, y_param)
     for row in eachrow(results)
         x_param_value = getproperty(row.lw_config, x_param)["strength"]
         push!(xlabels, x_param_value)
-
         y_param_value = getproperty(row.lw_config, y_param)["range"]
         push!(ylabels, y_param_value)
         data = row.avg_df
@@ -25,9 +24,8 @@ function plot_stopping_time_heatmap_v2(results, stat, x_param, y_param)
 
     xlabels = unique(xlabels)
     ylabels = unique(ylabels)
-
     Z = reshape(stopping_times, (length(ylabels), length(xlabels)))
-    @show Z
+    # @show Z
     logZ = log.(Z)
     normalZ = Z ./ Z[1, 1]
     fig, ax, pltobj = GLMakie.heatmap(
