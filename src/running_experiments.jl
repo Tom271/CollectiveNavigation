@@ -14,8 +14,8 @@ DrWatson.default_expand(::SimulationConfig) =
 
 function run_experiment(
     default_config::SimulationConfig,
-    flow::Symbol,
-    sensing::Symbol;
+    flow_param::Symbol,
+    sensing_param::Symbol;
     flow_values = 0.0:0.1:0.1,
     sensing_values = [0.0, 500.0],
 )
@@ -27,14 +27,14 @@ function run_experiment(
     for flow_value in flow_values
         config = default_config
         config.save_name = ""
-        flow_dict = getproperty(config, flow)
+        flow_dict = getproperty(config, flow_param)
         flow_dict["strength"] = flow_value
-        setproperty!(config, flow, flow_dict)
+        setproperty!(config, flow_param, flow_dict)
         for sensing_value in sensing_values
             logmessage(flow_value, sensing_value)
-            sense_dict = getproperty(config, sensing)
+            sense_dict = getproperty(config, sensing_param)
             sense_dict["range"] = sensing_value
-            setproperty!(config, sensing, sense_dict)
+            setproperty!(config, sensing_param, sense_dict)
             # safe save not necessary as realisations are averaged over
             file, path =
                 produce_or_load(datadir("averaged_data"), config, run_many_realisations; verbose = false)
