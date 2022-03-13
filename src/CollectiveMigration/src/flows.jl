@@ -38,8 +38,8 @@ function vertical_stream(
     x::Real,
     y::Real;
     strength::Real = 1.0,
-    left_bound::Real = 0.0,
-    right_bound::Real = 10.0,
+    left_bound::Real = -10000.0,
+    right_bound::Real = 10000.0,
     noise::Real = 0.0,
 )::(Vector{T} where {T<:Real})
     noise_xy = noise .* randn(Float64, 2)
