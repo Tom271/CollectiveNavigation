@@ -1,7 +1,7 @@
-""" Swimming against the flow
+#= Swimming against the flow
 Standard configuration, averaged over 10 realisations. Ranged and Nearest neighbour 
 interactions. 
-"""
+=#
 using DrWatson
 using DelimitedFiles
 @quickactivate :CollectiveNavigation

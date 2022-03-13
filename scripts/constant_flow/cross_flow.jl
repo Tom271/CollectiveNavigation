@@ -1,7 +1,7 @@
-""" Swimming in a cross flow
+#= Swimming in a cross flow
 Standard configuration, averaged over 10 realisations. Ranged and Nearest neighbour 
 interactions. 
-"""
+=#
 using DrWatson
 using DelimitedFiles
 @quickactivate :CollectiveNavigation
