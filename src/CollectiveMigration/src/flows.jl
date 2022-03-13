@@ -33,21 +33,21 @@ function annulus_flow(
     return [strength * cos(ϕ); strength * sin(ϕ)] + noise_xy
 end
 
-function vertical_stream(
-    t::Real,
-    x::Real,
-    y::Real;
-    strength::Real = 1.0,
-    left_bound::Real = -10000.0,
-    right_bound::Real = 10000.0,
-    noise::Real = 0.0,
-)::(Vector{T} where {T<:Real})
-    noise_xy = noise .* randn(Float64, 2)
-    if x <= left_bound || x >= right_bound
-        return [0.0; 0.0] + noise_xy
+    function vertical_stream(
+        t::Real,
+        x::Real,
+        y::Real;
+        strength::Real = 1.0,
+        left_bound::Real = -10000.0,
+        right_bound::Real = 10000.0,
+        noise::Real = 0.0,
+    )::(Vector{T} where {T<:Real})
+        noise_xy = noise .* randn(Float64, 2)
+        if x <= left_bound || x >= right_bound
+            return [0.0; 0.0] + noise_xy
+        end
+        return [0.0; strength] + noise_xy
     end
-    return [0.0; strength] + noise_xy
-end
 
 function smooth_vertical_stream(
     t::Real,
@@ -103,7 +103,8 @@ end
 
 function get_flow_function(flow::Dict{String,Any})
     flow_name = flow["type"]
-    kw = flow
+    kw::Dict{Symbol, Any} = Dict()
+    kw[:strength] = flow["strength"]
     flow_name = lowercase(flow_name)
     flow_functions = Dict{String,Any}(
         "vortex" => (t, x, y) -> vortex_flow(t, x, y; kw...),
