@@ -115,7 +115,7 @@ function run_realisation(config::SimulationConfig; save_output::Bool = false)
     event_count::Int64 = 1
     save_slot::Int64 = 1
     majority_travelling(num_agents) = num_agents >= ceil(0.1 * starting_num_agents)
-    on_track(dist_to_goal) = dist_to_goal < 1.25 * starting_dist_to_goal
+    on_track(dist_to_goal) = dist_to_goal < 1.5 * starting_dist_to_goal
     buffer_increase::Int64 = 1
 
     while (majority_travelling(num_agents) && on_track(dist_to_goal) && t <= terminal_time)
