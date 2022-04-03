@@ -227,26 +227,34 @@ function run_realisation(config::SimulationConfig; save_output::Bool = false)
 end
 
 function run_many_realisations(config)
-    stats = run_realisation(config; save_output = true)
-    stats["trial"] = 1
-    df = DataFrame(stats)
-    for i ∈ 2:config.num_repeats
-        @time stats = run_realisation(config)
+    df = DataFrame()
+    for i ∈ 1:config.num_repeats
+        if i == config.num_repeats
+            @time stats = run_realisation(config; save_output = true)
+        else
+            @time stats = run_realisation(config; save_output = false)
+        end
+
         stats["trial"] = i
-        realisation_df = DataFrame(stats)
-        # Will become very large, better to interpolate
-        #   and average on the fly?
-        # Interpolate in simulation loop, average after here
-        append!(df, realisation_df)
+        if i == 1
+            df = DataFrame(stats)
+        else
+            realisation_df = DataFrame(stats)
+            # Will become very large, better to interpolate
+            #   and average on the fly?
+            # Interpolate in simulation loop, average after here
+            append!(df, realisation_df)
+        end
     end
-    # Add code to do all metrics at once, not just individuals individuals_remaining
+
+    # Add code to do all metrics at once, not just individuals_remaining
     gdf = groupby(df, :coarse_time)
     avg_df = combine(
         gdf,
         [:average_dist_to_goal, :individuals_remaining, :num_neighbours] .=> mean,
     )
     # Add number of realisations to df
-    lw_config = config
+    lw_config = deepcopy(config)
     lw_config.kappa_CDF = nothing
     lw_config.kappa_input = nothing
     return @strdict(lw_config, avg_df)

@@ -26,7 +26,7 @@ function run_experiment(
     end
     parse_config!(default_config)
     for flow_value in flow_values
-        config = default_config
+        config = deepcopy(default_config)
         config.save_name = ""
         flow_dict = getproperty(config, flow_param)
         flow_dict["strength"] = flow_value
