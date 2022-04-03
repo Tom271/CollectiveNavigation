@@ -13,6 +13,7 @@ Base.@kwdef mutable struct SimulationConfig
     initial_condition::Dict{String,Any} = Dict("position" => "box", "heading" => "sector")
     mean_run_time::Float64 = 1.0
     α::Float64 = 0.5
+    heading_perception::Dict{String, String} = Dict("type" => "intended")
 end
 
 function interpolate_time_dict(stats::Dict{String,Any}, config::SimulationConfig)
@@ -37,6 +38,7 @@ function parse_config!(config::SimulationConfig)
     # config.initial_condition["heading"] = lowercase(config.initial_condition["heading"])
     config.flow["type"] = lowercase(config.flow["type"])
     config.sensing["type"] = lowercase(config.sensing["type"])
+    config.heading_perception["type"] = lowercase(config.heading_perception["type"])
     return config
 end
 
@@ -50,7 +52,6 @@ function check_arrivals(
     for agent_pos ∈ eachcol(positions)
         distance_from_goal = euclidean(agent_pos, goal_location)
         push!(arrived, distance_from_goal < goal_tolerance)
-
         average_distance_from_goal += distance_from_goal
     end
     average_distance_from_goal /= length(positions[1, :])
@@ -62,6 +63,7 @@ function run_realisation(config::SimulationConfig; save_output::Bool = false)
     # @unpack everything, basically `run_directed_group_with_removal`
     @unpack flow,
     sensing,
+    heading_perception,
     terminal_time,
     num_agents,
     kappa_input,
@@ -110,7 +112,6 @@ function run_realisation(config::SimulationConfig; save_output::Bool = false)
     if save_output
         file, config.save_name = open_save_file(save_dir, save_name)
     end
-
     agent_to_update::Int64 = 1
     event_count::Int64 = 1
     save_slot::Int64 = 1
@@ -123,13 +124,13 @@ function run_realisation(config::SimulationConfig; save_output::Bool = false)
         run_time::Float64, agent_to_update = findmin(run_times)
         run_times = run_times .- run_time
         # run all agents 
+        prev_pos = copy(current_pos)
         current_pos =
             current_pos +
             run_time .* transpose([cos.(current_headings) sin.(current_headings)])
         current_pos =
             current_pos .+
             run_time .* hcat(flow_at.(t, current_pos[1, :], current_pos[2, :])...)
-
         # Tumble one agent 
         # current_headings[agent_to_update], avg_num_neighbours = tumble_agent(agent_to_update, current_pos, current_headings, find_neighbours, agents, domain, kappa_CDF, kappa_input, avg_num_neighbours)
 
@@ -140,8 +141,16 @@ function run_realisation(config::SimulationConfig; save_output::Bool = false)
         neighbours = find_neighbours(agent_to_update, current_pos)
         num_neighbours = length(neighbours)
         avg_num_neighbours += num_neighbours
+        position_change = current_pos .- prev_pos
+        actual_headings = atan.(position_change[2,:],position_change[1,:])
         if num_neighbours > 1
-            neighbour_headings = current_headings[neighbours]
+            if heading_perception["type"] == "actual"
+                neighbour_headings = actual_headings[neighbours]
+            elseif heading_perception["type"] == "intended"
+                neighbour_headings = current_headings[neighbours]
+            else 
+                throw(DomainError(heading_perception["type"], "Invalid perception type"))
+            end
             neighbour_mean = mean(Manifolds.Circle(ℝ), neighbour_headings)
             ϕ::Float64 =
                 mean(Manifolds.Circle(ℝ), [neighbour_mean, updated_heading], [1 - α, α])

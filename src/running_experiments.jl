@@ -2,6 +2,7 @@ DrWatson.default_allowed(::SimulationConfig) = (Real, String, Symbol, Dict)
 DrWatson.allaccess(::SimulationConfig) = [
     "sensing",
     "flow",
+    "heading_perception",
     "num_repeats",
     "mean_run_time",
     "num_agents",
@@ -10,7 +11,7 @@ DrWatson.allaccess(::SimulationConfig) = [
     "initial_condition",
 ]
 DrWatson.default_expand(::SimulationConfig) =
-    ["sensing", "flow", "goal", "initial_condition"]
+    ["sensing", "flow", "goal", "initial_condition","heading_perception"]
 
 function run_experiment(
     default_config::SimulationConfig,
@@ -36,8 +37,12 @@ function run_experiment(
             sense_dict["range"] = sensing_value
             setproperty!(config, sensing_param, sense_dict)
             # safe save not necessary as realisations are averaged over
-            file, path =
-                produce_or_load(datadir("averaged_data"), config, run_many_realisations; verbose = false)
+            file, path = produce_or_load(
+                datadir("averaged_data"),
+                config,
+                run_many_realisations;
+                verbose = false,
+            )
             if flow_value == flow_values[1] && sensing_value == sensing_values[1]
                 df = DataFrame(file)
             else
