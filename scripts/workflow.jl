@@ -5,29 +5,30 @@ const kappa_CDF, kappa_input = load_kappa_CDF();
 # Create default config
 # List of parameters to vary over as input to run_experiment
 config = SimulationConfig(
-    num_repeats = 2,
-    flow = Dict("type" => "constant", "strength" => 0.0),
-    sensing = Dict("type" => "nearest", "range" => 0),
+    num_repeats = 1,
+    flow = Dict("type" => "vertical_stream", "strength" => 0.5),
+    sensing = Dict("type" => "nearest", "range" =>500),
     kappa_CDF = kappa_CDF,
-    terminal_time = 1000,
+    terminal_time = 5000,
     kappa_input = kappa_input,
+    # heading_perception = Dict("type" => "actual")
 );
 parse_config!(config);
 # Run one or many realisations
-# df = run_realisation(config; save_output=true)
+df = run_realisation(config; save_output = false)
 # all_data = run_many_realisations(config)
 # Or we can run an experiment, varying parameter values 
-experiment_df = run_experiment(
-    config,
-    :flow,
-    :sensing;
-    flow_values = 0.0:0.1:0.6,
-    sensing_values = Int64.([0.0, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 500.0]),
-)
+# experiment_df = run_experiment(
+#     config,
+#     :flow,
+#     :sensing;
+#     flow_values = 0.0:0.1:0.6,
+#     sensing_values = Int64.([0.0, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 500.0]),
+# )
 
-# Plotting experiment data
-plot_stopping_time_heatmap_v2(all_data, :individuals_remaining_mean, :flow, :sensing);
-plot_stopping_time_heatmap_v2(all_neg_data, :individuals_remaining_mean, :flow, :sensing);
+# # Plotting experiment data
+# plot_stopping_time_heatmap_v2(all_data, :individuals_remaining_mean, :flow, :sensing);
+# plot_stopping_time_heatmap_v2(all_neg_data, :individuals_remaining_mean, :flow, :sensing);
 # plot_stopping_time_heatmap_v2(all_data, :num_neighbours_mean, :flow, :sensing);
 # plot_stopping_time_heatmap_v2(all_data, :average_dist_to_goal_mean, :flow, :sensing);
 
