@@ -13,8 +13,11 @@ Base.@kwdef mutable struct SimulationConfig
     initial_condition::Dict{String,Any} = Dict("position" => "box", "heading" => "sector")
     mean_run_time::Float64 = 1.0
     α::Float64 = 0.5
-    heading_perception::Dict{String, String} = Dict("type" => "intended")
+    heading_perception::Dict{String,String} = Dict("type" => "intended")
 end
+
+equals_range(config::SimulationConfig, range::Real) = config.sensing["range"] == range
+equals_strength(config::SimulationConfig, strength::Real) = config.flow["strength"] == strength
 
 function interpolate_time_dict(stats::Dict{String,Any}, config::SimulationConfig)
     statistics = ["individuals_remaining", "average_dist_to_goal", "num_neighbours"]
@@ -58,7 +61,7 @@ function check_arrivals(
     return arrived, average_distance_from_goal
 end
 
-function run_realisation(config::SimulationConfig; save_output::Bool = false)
+function run_realisation(config::SimulationConfig; save_output::Bool=false)
     # Code to do all run and tumble goodness
     # @unpack everything, basically `run_directed_group_with_removal`
     @unpack flow,
@@ -115,7 +118,7 @@ function run_realisation(config::SimulationConfig; save_output::Bool = false)
     agent_to_update::Int64 = 1
     event_count::Int64 = 1
     save_slot::Int64 = 1
-    majority_travelling(num_agents) = num_agents >= ceil(0.1 * starting_num_agents)
+    majority_travelling(num_agents) = num_agents >= 1 #ceil(0.1 * starting_num_agents)
     on_track(dist_to_goal) = dist_to_goal < 1.5 * starting_dist_to_goal
     buffer_increase::Int64 = 1
 
@@ -142,13 +145,13 @@ function run_realisation(config::SimulationConfig; save_output::Bool = false)
         num_neighbours = length(neighbours)
         avg_num_neighbours += num_neighbours
         position_change = current_pos .- prev_pos
-        actual_headings = atan.(position_change[2,:],position_change[1,:])
+        actual_headings = atan.(position_change[2, :], position_change[1, :])
         if num_neighbours > 1
             if heading_perception["type"] == "actual"
                 neighbour_headings = actual_headings[neighbours]
             elseif heading_perception["type"] == "intended"
                 neighbour_headings = current_headings[neighbours]
-            else 
+            else
                 throw(DomainError(heading_perception["type"], "Invalid perception type"))
             end
             neighbour_mean = mean(Manifolds.Circle(ℝ), neighbour_headings)
@@ -162,7 +165,7 @@ function run_realisation(config::SimulationConfig; save_output::Bool = false)
                 kappa_CDF,
                 kappa_input,
             )
-            κ = κ > 1000 ? 1000 : κ
+            κ = κ > 10000 ? 10000 : κ
             updated_heading = mod(rand(rng, VonMises(ϕ, κ)), 2π)
         end
         current_headings[agent_to_update] = updated_heading
@@ -230,9 +233,9 @@ function run_many_realisations(config)
     df = DataFrame()
     for i ∈ 1:config.num_repeats
         if i == config.num_repeats
-            @time stats = run_realisation(config; save_output = true)
+            @time stats = run_realisation(config; save_output=true)
         else
-            @time stats = run_realisation(config; save_output = false)
+            @time stats = run_realisation(config; save_output=false)
         end
 
         stats["trial"] = i

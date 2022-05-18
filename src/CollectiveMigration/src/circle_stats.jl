@@ -87,5 +87,5 @@ function get_kappa(headings::Vector{Float64}, kappa_CDF, kappa_input)
         temp = findfirst(x -> cdf_sample < x, kappa_CDF[:, N-1, kappa_lookup_index])
         κ = kappa_input[temp] + rand() * (kappa_input[2] - kappa_input[1])
     end
-    return (κ > 1000) ? 1000 : κ
+    return κ
 end

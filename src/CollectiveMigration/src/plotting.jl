@@ -1,138 +1,144 @@
-struct CyclicContainer{T} <: AbstractVector{T}
-    c::Vector{T}
-    n::Int
-end
-CyclicContainer(c) = CyclicContainer(c, 0)
+CairoMakie.set_theme!(theme_minimal())
+update_theme!(
+    Lines = (linewidth = 4,),
+    palette = (color = ["#5BBCD6", "#F98400", "#F2AD00", "#00A08A", "#FF0000"],),
+)
 
-Base.length(c::CyclicContainer) = length(c.c)
-Base.size(c::CyclicContainer) = size(c.c)
-Base.getindex(c::CyclicContainer, i::Int) = c.c[mod1(i, length(c.c))]
-function Base.getindex(c::CyclicContainer)
-    c.n += 1
-    c[c.n]
-end
-Base.iterate(c::CyclicContainer, i = 1) = iterate(c.c, i)
-Base.getindex(c::CyclicContainer, i) = [c[j] for j in i]
-
-COLORS = [
-    "#440154"
-    "#472c7b"
-    "#3a528b"
-    "#2c728e"
-    "#20908c"
-    "#28ae7f"
-    "#5ec961"
-    "#addc30"
-    "#fde724"
-]
 Zissou = ["#3B9AB2", "#78B7C5", "#EBCC2A", "#E1AF00", "#F21A00"]
-CCOLORS = CyclicContainer(COLORS)
-LINESTYLES = CyclicContainer(["-", ":", "--", "-."])
 
-function generate_cmap(n)
-    if n > length(COLORS)
-        return :viridis
-    else
-        return cgrad(COLORS[1:n], n; categorical = true)
-    end
-end
-function theme!()
-    set_theme!(; palette = (color = COLORS,), fontsize = 26, linewidth = 5)
+function get_stopping_time(avg_df, stat, fraction_arrived)
+    avg_stat = avg_df[!, stat]
+    idx = findfirst(x -> x <= (1 - fraction_arrived) * avg_stat[1], avg_stat)
+    return isnothing(idx) ? missing : avg_df.coarse_time[idx]
 end
 
+function get_stopping_times(results::DataFrame; fraction_arrived = 0.9)
+    return select(
+        results,
+        :lw_config => ByRow(x -> x.flow["strength"]) => :flow_strength,
+        :lw_config => ByRow(x -> x.sensing["range"]) => :sensing_range,
+        :avg_df =>
+            ByRow(
+                x -> get_stopping_time(x, :individuals_remaining_mean, fraction_arrived),
+            ) => :stopping_time,
+    )
+end
 
-function plot_stopping_time_heatmap(results, stat, x_param, y_param)
-    xlabels = Float64[]
-    ylabels = Float64[]
-    stopping_times = Union{Float64,Missing}[]
-    function stopping_time_index(row)
-        idx = findfirst(x -> x <= 0.99 * row[1], row)
-        return isnothing(idx) ? missing : idx
-    end
-    # Iterate through results, calculate stopping time for stat and store
-    #  param labels
-    for row in eachrow(results)
-        x_param_value = getproperty(row.lw_config, x_param)["strength"]
-        push!(xlabels, x_param_value)
-        y_param_value = getproperty(row.lw_config, y_param)["range"]
-        push!(ylabels, y_param_value)
-        data = row.avg_df
-        stopping_time = stopping_time_index(data[!, stat])
-        if ismissing(stopping_time)
-            push!(stopping_times, missing)
-        else
-            push!(stopping_times, data.coarse_time[stopping_time])
-        end
-    end
+function arrivaltimeheatmap(
+    stopping_times;
+    logged = true,
+    normalised = true
+    )
+    xlabels = unique(stopping_times.flow_strength)
+    ylabels = unique(stopping_times.sensing_range)
+    stopping_time = stopping_times.stopping_time
+    Z = reshape(stopping_time, (length(ylabels), length(xlabels)))
 
-    xlabels = unique(xlabels)
-    ylabels = unique(ylabels)
-    Z = reshape(stopping_times, (length(ylabels), length(xlabels)))
-    # @show Z
-    logZ = log.(Z)
-    normalZ = Z ./ Z[1, 1]
-    fig, ax, pltobj = GLMakie.heatmap(
+    fig, ax, plotobj = GLMakie.heatmap(
         1:length(xlabels),
         1:length(ylabels),
-        Z';
+        logged ? log.(Z') : Z';
+        colormap = cmap("D4"),
         axis = (;
             xlabel = "Flow Strength",
             ylabel = "Sensing Range",
             xticks = (1:length(xlabels), string.(xlabels)),
             yticks = (1:length(ylabels), string.(ylabels)),
         ),
-        colormap = Reverse(:balance),
     )
+    # Add labels
+    normalZ = Z ./ Z[ylabels.==0.0, xlabels.==0.0]
+    normalZ = [ismissing(i) ? 0 : i for i ∈ normalZ]
+    Z = [ismissing(i) ? 0 : i for i ∈ Z]
+    Z = convert.(Int64, Z)
+    labels = string.(normalised ? round.(normalZ, sigdigits=2) : Z)
     text!(
-        string.(round.(100 .* normalZ) ./ 100)[:],
+        labels[:],
         position = Point.((1:length(xlabels))', (1:length(ylabels)))[:],
         align = (:center, :baseline),
         color = :white,
+        textsize = normalised ? 20 : 15
     )
-    Colorbar(fig[1, 2], pltobj, label = "Stopping Time")
-    display(fig)
-    return fig, ax, pltobj
+    c = Colorbar(
+        fig[1, 2],
+        plotobj,
+        label = "Stopping Time",
+        tickformat = xs -> ["$(round(Int64,exp(x)))" for x in xs]
+    )
+
+
+
+    return fig, ax, plotobj
 end
 
-function plot_animation(df::DataFrame; sensing_value = missing, flow_strength = missing)
-    specific_flow_data = subset(
-        df,
-        :lw_config => ByRow(
-            x -> filter_trajectories(
-                x;
-                flow_strength = flow_strength,
-                sensing_range = sensing_value,
-            ),
-        ),
+function plot_stopping_time_heatmap(
+    results;
+    save_plot = false,
+    logged = true,
+    normalised = true,
+    fraction_arrived = 0.9)
+
+    stopping_times = get_stopping_times(results; fraction_arrived)
+    fig,ax,plotobj = arrivaltimeheatmap(
+        stopping_times;
+        logged = logged,
+        normalised = normalised
+        )
+    if(save_plot)
+        sensing_type  = results[1,:].lw_config.sensing["type"]
+        perception_type  = results[1,:].lw_config.heading_perception["type"]
+        flow_type  = results[1,:].lw_config.flow["type"]
+        @info "Saved as ind_rem_sr=$(sensing_type)_perc=$(perception_type)_flow=$(flow_type)_heatmap_fraction$(fraction_arrived).png"
+        save(plotsdir("ind_rem_sr=$(sensing_type)_perc=$(perception_type)_flow=$(flow_type)_heatmap_fraction$(fraction_arrived).png"),fig)
+    end
+
+    return fig, ax, plotobj
+end
+
+function plot_animation_v2(
+    df::DataFrame;
+    sensing_range = missing,
+    flow_strength = missing
     )
-    config = specific_flow_data.lw_config[1]
+
+    traj = filter(
+        :lw_config => x-> equals_range(x,sensing_range) &&
+        equals_strength(x,flow_strength),
+        df
+    )
+
+    config = traj.lw_config[1]
     @show config
+    
     positions = readdlm(joinpath(config.save_dir, config.save_name * ".tsv"))
+    # Arrived particles are stored as empty 
+    positions[positions.==""] .= config.goal["location"][1]
+    positions = convert.(Float64, positions)
+    
+    x_pos = positions[1:2:end,:]
+    y_pos = positions[2:2:end,:]
+
+    x_node = Observable(x_pos[1,:])
+    y_node = Observable(y_pos[1,:])
     fig, ax, s = scatter(
-        convert(Vector{Float64}, positions[1, :]),
-        convert(Vector{Float64}, positions[2, :]),
+        x_node,
+        y_node,
         ms = 3,
         color = Zissou[4],
     )
+    xlims!(ax, (-1.5*maximum(x_pos[1,:]), 1.5*maximum(x_pos[1,:]) ) )
+    ylims!(ax, (-1.5*maximum(y_pos[1,:]), 1.5*maximum(y_pos[1,:])))
+
     scatter!(
         tuple(config.goal["location"]...);
         markersize = 2 * config.goal["tolerance"],
         color = Zissou[5],
         markerspace = SceneSpace,
     )
-    ax.autolimitaspect = 1
-
-    g = get_flow_function(config.flow)
-    f(x, y) = Point2(g(0, x, y))
-    streamplot!(f, -60..240, -50..150)
-    xlims!(-60, 240)
-    ylims!(-50, 150)
-    record(fig, plotsdir("test2.mp4"), 1:50:size(positions)[1]; framerate = 30) do i
-        delete!(ax, s)
-        trim_empty(x) = filter(i -> isa(i, Float64), x)
-        x = convert(Vector{Float64}, trim_empty(positions[i, :]))
-        y = convert(Vector{Float64}, trim_empty(positions[i+1, :]))
-        s = scatter!(x, y, markersize = 3, color = :blue)
+    # ax.autolimitaspect = 1
+    record(fig, plotsdir("sr=$(sensing_range)_flow=$(flow_strength).mp4"), 1:2:size(x_pos)[1]; framerate = 30) do i
+        x_node[] = x_pos[i,:] 
+        y_node[] =  y_pos[i,:]
     end
 end
 

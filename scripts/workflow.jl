@@ -7,7 +7,7 @@ const kappa_CDF, kappa_input = load_kappa_CDF();
 config = SimulationConfig(
     num_repeats = 1,
     flow = Dict("type" => "vertical_stream", "strength" => 0.5),
-    sensing = Dict("type" => "nearest", "range" =>500),
+    sensing = Dict("type" => "nearest", "range" => 500),
     kappa_CDF = kappa_CDF,
     terminal_time = 5000,
     kappa_input = kappa_input,

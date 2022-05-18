@@ -34,7 +34,7 @@ actual_fig, ax, pltobj = plot_stopping_time_heatmap(
     :sensing,
 );
 save(plotsdir("actual_nearest_cross_flow_ind_rem_heatmap.png"), actual_fig)
-actual_cross_flow_data = nothing 
+actual_cross_flow_data = nothing
 actual_fig, ax, pltobj = nothing, nothing, nothing
 config_intend = SimulationConfig(
     num_repeats = 10,

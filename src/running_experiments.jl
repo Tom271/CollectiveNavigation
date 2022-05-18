@@ -11,14 +11,14 @@ DrWatson.allaccess(::SimulationConfig) = [
     "initial_condition",
 ]
 DrWatson.default_expand(::SimulationConfig) =
-    ["sensing", "flow", "goal", "initial_condition","heading_perception"]
+    ["sensing", "flow", "goal", "initial_condition", "heading_perception"]
 
 function run_experiment(
     default_config::SimulationConfig,
     flow_param::Symbol,
     sensing_param::Symbol;
-    flow_values = 0.0:0.1:0.1,
-    sensing_values = [0.0, 500.0],
+    flow_values=0.0:0.1:0.1,
+    sensing_values=[0.0, 500.0]
 )
     df = DataFrame()
     if default_config.kappa_input === nothing || default_config.kappa_CDF === nothing
@@ -41,7 +41,7 @@ function run_experiment(
                 datadir("averaged_data"),
                 config,
                 run_many_realisations;
-                verbose = false,
+                verbose=false
             )
             if flow_value == flow_values[1] && sensing_value == sensing_values[1]
                 df = DataFrame(file)
@@ -53,3 +53,39 @@ function run_experiment(
 
     return df
 end
+
+
+function run_experiment_one_param(
+    default_config::SimulationConfig,
+    sensing_param::Symbol;
+    sensing_values=[0.0, 500.0]
+)
+    df = DataFrame()
+    if default_config.kappa_input === nothing || default_config.kappa_CDF === nothing
+        default_config.kappa_CDF, default_config.kappa_input = load_kappa_CDF()
+    end
+    parse_config!(default_config)
+    config = deepcopy(default_config)
+    config.save_name = ""
+    for sensing_value in sensing_values
+        logmessage(0.0, sensing_value)
+        sense_dict = getproperty(config, sensing_param)
+        sense_dict["range"] = sensing_value
+        setproperty!(config, sensing_param, sense_dict)
+        # safe save not necessary as realisations are averaged over
+        file, path = produce_or_load(
+            datadir("averaged_data_met_rob"),
+            config,
+            run_many_realisations;
+            verbose=false
+        )
+        if sensing_value == sensing_values[1]
+            df = DataFrame(file)
+        else
+            append!(df, file)
+        end
+    end
+
+    return df
+end
+
