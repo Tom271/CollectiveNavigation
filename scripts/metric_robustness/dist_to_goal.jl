@@ -7,8 +7,12 @@ using DrWatson
 using DelimitedFiles
 @quickactivate :CollectiveNavigation
 const kappa_CDF, kappa_input = load_kappa_CDF();
-for num_agents ∈ [30, 100, 500, 1000]
+df = nothing
+for num_agents ∈ [30, 100, 500]
     for tol ∈ [5.0, 10.0, 20.0]
+        # if num_agents > 100
+        #     continue
+        # end
         # Create default config
         # List of parameters to vary over as input to run_experiment
         config = SimulationConfig(
@@ -29,5 +33,10 @@ for num_agents ∈ [30, 100, 500, 1000]
             :sensing;
             sensing_values=[0.0, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 500.0]
         )
+        if num_agents == 30 && tol == 5.0
+            df = data
+        else
+            append!(df, data)
+        end
     end
 end
