@@ -6,7 +6,7 @@ Base.@kwdef mutable struct SimulationConfig
     kappa_CDF::Union{Array{Float64,3},Nothing} = nothing
     num_agents::Int = 100
     terminal_time::Float64 = 1000
-    goal::Dict{String,Any} = Dict("location" => [0.0, 0.0], "tolerance" => 5.0)
+    goal::Dict{String,Any} = Dict("location" => [0.0, 0.0], "tolerance" => 10.0)
     information_field_strength::Float64 = 1.0
     flow::Dict{String,Any} = Dict()
     sensing::Dict{String,Any} = Dict("type" => "ranged", "range" => 0.0)
