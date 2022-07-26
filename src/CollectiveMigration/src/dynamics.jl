@@ -250,15 +250,16 @@ function run_many_realisations(config)
         end
     end
 
+    ## Averaging over coarse time gives funny results, comment out and store all data realisation stats.
     # Add code to do all metrics at once, not just individuals_remaining
-    gdf = groupby(df, :coarse_time)
-    avg_df = combine(
-        gdf,
-        [:average_dist_to_goal, :individuals_remaining, :num_neighbours] .=> mean,
-    )
+    # gdf = groupby(df, :coarse_time)
+    # avg_df = combine(
+    #     gdf,
+    #     [:average_dist_to_goal, :individuals_remaining, :num_neighbours] .=> mean,
+    # )
     # Add number of realisations to df
     lw_config = deepcopy(config)
     lw_config.kappa_CDF = nothing
     lw_config.kappa_input = nothing
-    return @strdict(lw_config, avg_df)
+    return @strdict(lw_config, df)
 end

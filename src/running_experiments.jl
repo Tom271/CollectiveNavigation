@@ -38,7 +38,7 @@ function run_experiment(
             setproperty!(config, sensing_param, sense_dict)
             # safe save not necessary as realisations are averaged over
             file, path = produce_or_load(
-                datadir("averaged_data"),
+                datadir("realisation_data"),
                 config,
                 run_many_realisations;
                 verbose=false
@@ -74,7 +74,7 @@ function run_experiment_one_param(
         setproperty!(config, sensing_param, sense_dict)
         # safe save not necessary as realisations are averaged over
         file, path = produce_or_load(
-            datadir("averaged_data_met_rob"),
+            datadir("realisation_data_met_rob"),
             config,
             run_many_realisations;
             verbose=false
