@@ -7,7 +7,7 @@ using DrWatson
 using DelimitedFiles
 @quickactivate :CollectiveNavigation
 const kappa_CDF, kappa_input = load_kappa_CDF();
-full_df = nothing
+# full_df = nothing
 for num_agents ∈ reverse([30, 100, 500])
     for tol ∈ reverse([5.0, 10.0, 20.0])
         # if num_agents > 100
@@ -33,11 +33,11 @@ for num_agents ∈ reverse([30, 100, 500])
             :sensing;
             sensing_values=[0.0, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 500.0]
         )
-        if num_agents == 500 && tol == 20.0
-            global full_df = data
-        else
-            append!(full_df, data)
-        end
+        # if num_agents == 500 && tol == 20.0
+        #     global full_df = data
+        # else
+        #     append!(full_df, data)
+        # end
     end
 end
 full_df 
