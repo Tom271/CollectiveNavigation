@@ -18,7 +18,8 @@ function run_experiment(
     flow_param::Symbol,
     sensing_param::Symbol;
     flow_values=0.0:0.1:0.1,
-    sensing_values=[0.0, 500.0]
+    sensing_values=[0.0, 500.0],
+    show_log = true
 )
     df = DataFrame()
     if default_config.kappa_input === nothing || default_config.kappa_CDF === nothing
@@ -32,7 +33,8 @@ function run_experiment(
         flow_dict["strength"] = flow_value
         setproperty!(config, flow_param, flow_dict)
         for sensing_value in sensing_values
-            logmessage(flow_value, sensing_value)
+            # short circuit
+            show_log && logmessage(flow_value, sensing_value)
             sense_dict = getproperty(config, sensing_param)
             sense_dict["range"] = sensing_value
             setproperty!(config, sensing_param, sense_dict)
