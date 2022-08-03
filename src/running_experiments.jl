@@ -60,7 +60,8 @@ end
 function run_experiment_one_param(
     default_config::SimulationConfig,
     sensing_param::Symbol;
-    sensing_values=[0.0, 500.0]
+    sensing_values=[0.0, 500.0],
+    show_log = true
 )
     df = DataFrame()
     if default_config.kappa_input === nothing || default_config.kappa_CDF === nothing
@@ -70,7 +71,7 @@ function run_experiment_one_param(
     config = deepcopy(default_config)
     config.save_name = ""
     for sensing_value in sensing_values
-        logmessage(0.0, sensing_value)
+        show_log && logmessage(0.0, sensing_value)
         sense_dict = getproperty(config, sensing_param)
         sense_dict["range"] = sensing_value
         setproperty!(config, sensing_param, sense_dict)
