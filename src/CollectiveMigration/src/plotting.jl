@@ -1,10 +1,64 @@
 CairoMakie.set_theme!(theme_minimal())
 update_theme!(
-    Lines = (linewidth = 4,),
-    palette = (color = ["#5BBCD6", "#F98400", "#F2AD00", "#00A08A", "#FF0000"],),
+    Lines=(linewidth=4,),
+    palette=(color=["#5BBCD6", "#F98400", "#F2AD00", "#00A08A", "#FF0000"],),
 )
 
 Zissou = ["#3B9AB2", "#78B7C5", "#EBCC2A", "#E1AF00", "#F21A00"]
+
+function plot_arrival_heatmap(
+    arrival_times::DataFrame;
+    save_plot=false,
+    logged=true,
+    normalised=true
+)
+    xlabels = unique(arrival_times[!, :flow_strength])
+    ylabels = unique(arrival_times[!, :sensing_range])
+    sort!(arrival_times, [:sensing_range, :flow_strength])
+    Z = reshape(arrival_times[!, :arrival_time_mean], (length(xlabels), length(ylabels)))
+    fig, ax, hm = GLMakie.heatmap(
+        1:length(xlabels),
+        1:length(ylabels),
+        logged ? log.(Z) : Z;
+        colormap=cmap("D4"),
+        axis=(;
+            xlabel="Flow Strength",
+            ylabel="Sensing Range",
+            xticks=(1:length(xlabels), string.(xlabels)),
+            yticks=(1:length(ylabels), string.(ylabels))
+        )
+    )
+    ref_point = @pipe arrival_times |>
+                      subset(
+        _,
+        :sensing_range => ByRow(==(0)),
+        :flow_strength => ByRow(==(0))
+    )
+    normalZ = Z ./ ref_point[1, :arrival_time_mean]
+    normalZ = [ismissing(i) ? 0 : i for i ∈ normalZ]
+    Z = [ismissing(i) ? 0 : i for i ∈ Z]
+    Z = convert.(Int64, round.(Z))
+    labels = string.(normalised ? round.(normalZ, sigdigits=2) : Z)
+    text!(
+        labels[:],
+        position=Point.((1:length(xlabels)), (1:length(ylabels))')[:],
+        align=(:center, :baseline),
+        color=:white,
+        textsize=normalised ? 20 : 15
+    )
+    c = Colorbar(
+        fig[1, 2],
+        hm,
+        label="Stopping Time",
+        tickformat=xs -> ["$(round(Int64,exp(x)))" for x in xs]
+    )
+
+    if (save_plot)
+        @info "Saved as heatmap.png"
+        save(plotsdir("heatmap.png"), fig,)
+    end
+    return fig, ax, hm
+end
 
 function get_stopping_time(avg_df, stat, fraction_arrived)
     avg_stat = avg_df[!, stat]
@@ -12,7 +66,7 @@ function get_stopping_time(avg_df, stat, fraction_arrived)
     return isnothing(idx) ? missing : avg_df.coarse_time[idx]
 end
 
-function get_stopping_times(results::DataFrame; fraction_arrived = 0.9)
+function get_stopping_times(results::DataFrame; fraction_arrived=0.9)
     return select(
         results,
         :lw_config => ByRow(x -> x.flow["strength"]) => :flow_strength,
@@ -24,7 +78,7 @@ function get_stopping_times(results::DataFrame; fraction_arrived = 0.9)
     )
 end
 
-function arrivaltimeheatmap(stopping_times; logged = true, normalised = true)
+function arrivaltimeheatmap(stopping_times; logged=true, normalised=true)
     xlabels = unique(stopping_times.flow_strength)
     ylabels = unique(stopping_times.sensing_range)
     stopping_time = stopping_times.stopping_time
@@ -34,32 +88,32 @@ function arrivaltimeheatmap(stopping_times; logged = true, normalised = true)
         1:length(xlabels),
         1:length(ylabels),
         logged ? log.(Z') : Z';
-        colormap = cmap("D4"),
-        axis = (;
-            xlabel = "Flow Strength",
-            ylabel = "Sensing Range",
-            xticks = (1:length(xlabels), string.(xlabels)),
-            yticks = (1:length(ylabels), string.(ylabels)),
-        ),
+        colormap=cmap("D4"),
+        axis=(;
+            xlabel="Flow Strength",
+            ylabel="Sensing Range",
+            xticks=(1:length(xlabels), string.(xlabels)),
+            yticks=(1:length(ylabels), string.(ylabels))
+        )
     )
     # Add labels
     normalZ = Z ./ Z[ylabels.==0.0, xlabels.==0.0]
     normalZ = [ismissing(i) ? 0 : i for i ∈ normalZ]
     Z = [ismissing(i) ? 0 : i for i ∈ Z]
     Z = convert.(Int64, Z)
-    labels = string.(normalised ? round.(normalZ, sigdigits = 2) : Z)
+    labels = string.(normalised ? round.(normalZ, sigdigits=2) : Z)
     text!(
         labels[:],
-        position = Point.((1:length(xlabels))', (1:length(ylabels)))[:],
-        align = (:center, :baseline),
-        color = :white,
-        textsize = normalised ? 20 : 15,
+        position=Point.((1:length(xlabels))', (1:length(ylabels)))[:],
+        align=(:center, :baseline),
+        color=:white,
+        textsize=normalised ? 20 : 15,
     )
     c = Colorbar(
         fig[1, 2],
         plotobj,
-        label = "Stopping Time",
-        tickformat = xs -> ["$(round(Int64,exp(x)))" for x in xs],
+        label="Stopping Time",
+        tickformat=xs -> ["$(round(Int64,exp(x)))" for x in xs],
     )
 
 
@@ -69,15 +123,15 @@ end
 
 function plot_stopping_time_heatmap(
     results;
-    save_plot = false,
-    logged = true,
-    normalised = true,
-    fraction_arrived = 0.9,
+    save_plot=false,
+    logged=true,
+    normalised=true,
+    fraction_arrived=0.9
 )
 
     stopping_times = get_stopping_times(results; fraction_arrived)
     fig, ax, plotobj =
-        arrivaltimeheatmap(stopping_times; logged = logged, normalised = normalised)
+        arrivaltimeheatmap(stopping_times; logged=logged, normalised=normalised)
     if (save_plot)
         sensing_type = results[1, :].lw_config.sensing["type"]
         perception_type = results[1, :].lw_config.heading_perception["type"]
@@ -94,7 +148,7 @@ function plot_stopping_time_heatmap(
     return fig, ax, plotobj
 end
 
-function plot_animation_v2(df::DataFrame; sensing_range = missing, flow_strength = missing)
+function plot_animation_v2(df::DataFrame; sensing_range=missing, flow_strength=missing)
 
     traj = filter(
         :lw_config =>
@@ -115,22 +169,22 @@ function plot_animation_v2(df::DataFrame; sensing_range = missing, flow_strength
 
     x_node = Observable(x_pos[1, :])
     y_node = Observable(y_pos[1, :])
-    fig, ax, s = scatter(x_node, y_node, ms = 3, color = Zissou[4])
+    fig, ax, s = scatter(x_node, y_node, ms=3, color=Zissou[4])
     xlims!(ax, (-1.5 * maximum(x_pos[1, :]), 1.5 * maximum(x_pos[1, :])))
     ylims!(ax, (-1.5 * maximum(y_pos[1, :]), 1.5 * maximum(y_pos[1, :])))
 
     scatter!(
         tuple(config.goal["location"]...);
-        markersize = 2 * config.goal["tolerance"],
-        color = Zissou[5],
-        markerspace = SceneSpace,
+        markersize=2 * config.goal["tolerance"],
+        color=Zissou[5],
+        markerspace=SceneSpace
     )
     # ax.autolimitaspect = 1
     record(
         fig,
         plotsdir("sr=$(sensing_range)_flow=$(flow_strength).mp4"),
         1:2:size(x_pos)[1];
-        framerate = 30,
+        framerate=30
     ) do i
         x_node[] = x_pos[i, :]
         y_node[] = y_pos[i, :]
@@ -142,21 +196,21 @@ function plot_individual!(
     ax::Any,
     pos::Tuple{T,T} where {T},
     heading::Real;
-    size::Real = 1,
-    colour = Zissou[1],
-    arrow_colour = Zissou[2],
-    arrow_length = 1.5,
+    size::Real=1,
+    colour=Zissou[1],
+    arrow_colour=Zissou[2],
+    arrow_length=1.5
 )
-    poly!(ax, Makie.Circle(Point2f(pos[1], pos[2]), size), color = colour)
+    poly!(ax, Makie.Circle(Point2f(pos[1], pos[2]), size), color=colour)
     arrows!(
         ax,
         [pos[1]],
         [pos[2]],
         [arrow_length * cos(heading)],
         [arrow_length * sin(heading)],
-        color = arrow_colour,
-        arrowsize = 20,
-        linewidth = 4,
+        color=arrow_colour,
+        arrowsize=20,
+        linewidth=4,
     )
     return nothing
 end
@@ -165,21 +219,21 @@ function plot_group!(
     ax::Any,
     pos,
     heading::Vector{T} where {T};
-    size::Real = 1,
-    colour = Zissou[1],
-    arrow_colour = Zissou[2],
-    arrow_length = 1.5,
+    size::Real=1,
+    colour=Zissou[1],
+    arrow_colour=Zissou[2],
+    arrow_length=1.5
 )
-    poly!(ax, Makie.Circle.(Point2f.(pos[1, :], pos[2, :]), size), color = colour)
+    poly!(ax, Makie.Circle.(Point2f.(pos[1, :], pos[2, :]), size), color=colour)
     arrows!(
         ax,
         pos[1, :],
         pos[2, :],
         arrow_length .* cos.(heading),
         arrow_length .* sin.(heading),
-        color = arrow_colour,
-        arrowsize = 20,
-        linewidth = 4,
+        color=arrow_colour,
+        arrowsize=20,
+        linewidth=4,
     )
     return nothing
 end

@@ -16,7 +16,9 @@ export theme!
 export plot_individual!, plot_group!, circ_resultant
 export get_sensing_kernel, find_neighbours
 export Zissou
-export get_stopping_times, get_mean_individuals_remaining
+export get_stopping_times
+export get_mean_individuals_remaining, get_arrival_times, get_centile_arrival
+export make_failures_explicit, plot_arrival_heatmap
 include("circle_stats.jl")
 include("dynamics.jl")
 include("flows.jl")
