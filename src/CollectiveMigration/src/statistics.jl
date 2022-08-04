@@ -33,14 +33,14 @@ function get_arrival_times(df::DataFrame, groups::Vector{Symbol})
         convert.(Int, round.(Int, arrival_times[!, :individuals_remaining]))
 
     arrival_times = @pipe arrival_times |>
-          groupby(_, [groups..., :individuals_remaining, :trial]) |>
-          combine(_, :coarse_time => first) |>
-          groupby(_, [groups..., :individuals_remaining]) |>
-          combine(
-              _,
-              :coarse_time_first => mean => :arrival_time_mean,
-              :coarse_time_first => std => :arrival_time_std,
-          )
+                          groupby(_, [groups..., :individuals_remaining, :trial]) |>
+                          combine(_, :coarse_time => first) |>
+                          groupby(_, [groups..., :individuals_remaining]) |>
+                          combine(
+                              _,
+                              :coarse_time_first => mean => :arrival_time_mean,
+                              :coarse_time_first => std => :arrival_time_std,
+                          )
 
 end
 
@@ -53,12 +53,14 @@ given. Defaults to the median. Should be variable based on `num_agents`.
 
 See also [`get_arrival_times`](@ref)
 """
-function get_centile_arrival(arrival_times::DataFrame; centile::Int = 50)
+function get_centile_arrival(arrival_times::DataFrame; centile::Int=50)
     @pipe arrival_times |>
           # Remove time when no individuals have arrived (should be variable: num_agents)
           subset(_, :individuals_remaining => x -> x .< 100) |>
           subset(_, :individuals_remaining => x -> x .== centile)
 end
+
+
 """
     make_failures_explicit(
         arrival_times::DataFrame,
@@ -82,6 +84,7 @@ function make_failures_explicit(
     sensing_values = unique(df[!, groups[1]])
     flow_strengths = unique(df[!, groups[2]])
     all_combos = @pipe DataFrame(Iterators.product(sensing_values, flow_strengths)) |>
-          rename(_, [1 => groups[1], 2 => groups[2]])
-    full_arrival_times = @pipe arrival_times |> outerjoin(_, all_combos, on = groups)
+                       rename(_, [1 => groups[1], 2 => groups[2]])
+    full_arrival_times = @pipe arrival_times |> outerjoin(_, all_combos, on=groups)
+    return full_arrival_times
 end

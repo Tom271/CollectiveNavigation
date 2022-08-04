@@ -8,7 +8,7 @@ using PerceptualColourMaps
 using Colors
 using Statistics
 using Pipe: @pipe
-using Arrow
+
 colors = cmap("D4"; N=9);
 
 ## Setup experiment configuration
