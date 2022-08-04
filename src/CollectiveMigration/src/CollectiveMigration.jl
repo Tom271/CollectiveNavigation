@@ -5,6 +5,7 @@ using Interpolations,
     LinearAlgebra, JLD2, GLMakie, CairoMakie, Manifolds, MAT, Parameters, Random
 using Colors, PerceptualColourMaps
 using Pipe: @pipe
+using ProgressBars
 
 export load_kappa_CDF, get_kappa
 export SimulationConfig, parse_config!, run_realisation, run_many_realisations
@@ -15,7 +16,7 @@ export theme!
 export plot_individual!, plot_group!, circ_resultant
 export get_sensing_kernel, find_neighbours
 export Zissou
-export get_stopping_times
+export get_stopping_times, get_mean_individuals_remaining
 include("circle_stats.jl")
 include("dynamics.jl")
 include("flows.jl")
