@@ -1,7 +1,8 @@
 module CollectiveMigration
 
 using CodecZlib, DelimitedFiles, DataFrames, Dates, Distances, Distributions, DrWatson
-using Interpolations, LinearAlgebra, JLD2, GLMakie, CairoMakie, Manifolds, MAT, Parameters, Random
+using Interpolations,
+    LinearAlgebra, JLD2, GLMakie, CairoMakie, Manifolds, MAT, Parameters, Random
 using Colors, PerceptualColourMaps
 export load_kappa_CDF, get_kappa
 export SimulationConfig, parse_config!, run_realisation, run_many_realisations

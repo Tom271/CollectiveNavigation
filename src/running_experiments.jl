@@ -17,9 +17,9 @@ function run_experiment(
     default_config::SimulationConfig,
     flow_param::Symbol,
     sensing_param::Symbol;
-    flow_values=0.0:0.1:0.1,
-    sensing_values=[0.0, 500.0],
-    show_log = true
+    flow_values = 0.0:0.1:0.1,
+    sensing_values = [0.0, 500.0],
+    show_log = true,
 )
     df = DataFrame()
     if default_config.kappa_input === nothing || default_config.kappa_CDF === nothing
@@ -43,7 +43,7 @@ function run_experiment(
                 datadir("realisation_data"),
                 config,
                 run_many_realisations;
-                verbose=false
+                verbose = false,
             )
             if flow_value == flow_values[1] && sensing_value == sensing_values[1]
                 df = DataFrame(file)
@@ -60,8 +60,8 @@ end
 function run_experiment_one_param(
     default_config::SimulationConfig,
     sensing_param::Symbol;
-    sensing_values=[0.0, 500.0],
-    show_log = true
+    sensing_values = [0.0, 500.0],
+    show_log = true,
 )
     df = DataFrame()
     if default_config.kappa_input === nothing || default_config.kappa_CDF === nothing
@@ -80,7 +80,7 @@ function run_experiment_one_param(
             datadir("realisation_data_met_rob"),
             config,
             run_many_realisations;
-            verbose=false
+            verbose = false,
         )
         if sensing_value == sensing_values[1]
             df = DataFrame(file)

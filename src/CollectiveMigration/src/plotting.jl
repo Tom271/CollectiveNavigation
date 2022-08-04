@@ -24,11 +24,7 @@ function get_stopping_times(results::DataFrame; fraction_arrived = 0.9)
     )
 end
 
-function arrivaltimeheatmap(
-    stopping_times;
-    logged = true,
-    normalised = true
-    )
+function arrivaltimeheatmap(stopping_times; logged = true, normalised = true)
     xlabels = unique(stopping_times.flow_strength)
     ylabels = unique(stopping_times.sensing_range)
     stopping_time = stopping_times.stopping_time
@@ -51,19 +47,19 @@ function arrivaltimeheatmap(
     normalZ = [ismissing(i) ? 0 : i for i ∈ normalZ]
     Z = [ismissing(i) ? 0 : i for i ∈ Z]
     Z = convert.(Int64, Z)
-    labels = string.(normalised ? round.(normalZ, sigdigits=2) : Z)
+    labels = string.(normalised ? round.(normalZ, sigdigits = 2) : Z)
     text!(
         labels[:],
         position = Point.((1:length(xlabels))', (1:length(ylabels)))[:],
         align = (:center, :baseline),
         color = :white,
-        textsize = normalised ? 20 : 15
+        textsize = normalised ? 20 : 15,
     )
     c = Colorbar(
         fig[1, 2],
         plotobj,
         label = "Stopping Time",
-        tickformat = xs -> ["$(round(Int64,exp(x)))" for x in xs]
+        tickformat = xs -> ["$(round(Int64,exp(x)))" for x in xs],
     )
 
 
@@ -76,58 +72,52 @@ function plot_stopping_time_heatmap(
     save_plot = false,
     logged = true,
     normalised = true,
-    fraction_arrived = 0.9)
+    fraction_arrived = 0.9,
+)
 
     stopping_times = get_stopping_times(results; fraction_arrived)
-    fig,ax,plotobj = arrivaltimeheatmap(
-        stopping_times;
-        logged = logged,
-        normalised = normalised
-        )
-    if(save_plot)
-        sensing_type  = results[1,:].lw_config.sensing["type"]
-        perception_type  = results[1,:].lw_config.heading_perception["type"]
-        flow_type  = results[1,:].lw_config.flow["type"]
+    fig, ax, plotobj =
+        arrivaltimeheatmap(stopping_times; logged = logged, normalised = normalised)
+    if (save_plot)
+        sensing_type = results[1, :].lw_config.sensing["type"]
+        perception_type = results[1, :].lw_config.heading_perception["type"]
+        flow_type = results[1, :].lw_config.flow["type"]
         @info "Saved as ind_rem_sr=$(sensing_type)_perc=$(perception_type)_flow=$(flow_type)_heatmap_fraction$(fraction_arrived).png"
-        save(plotsdir("ind_rem_sr=$(sensing_type)_perc=$(perception_type)_flow=$(flow_type)_heatmap_fraction$(fraction_arrived).png"),fig)
+        save(
+            plotsdir(
+                "ind_rem_sr=$(sensing_type)_perc=$(perception_type)_flow=$(flow_type)_heatmap_fraction$(fraction_arrived).png",
+            ),
+            fig,
+        )
     end
 
     return fig, ax, plotobj
 end
 
-function plot_animation_v2(
-    df::DataFrame;
-    sensing_range = missing,
-    flow_strength = missing
-    )
+function plot_animation_v2(df::DataFrame; sensing_range = missing, flow_strength = missing)
 
     traj = filter(
-        :lw_config => x-> equals_range(x,sensing_range) &&
-        equals_strength(x,flow_strength),
-        df
+        :lw_config =>
+            x -> equals_range(x, sensing_range) && equals_strength(x, flow_strength),
+        df,
     )
 
     config = traj.lw_config[1]
     @show config
-    
+
     positions = readdlm(joinpath(config.save_dir, config.save_name * ".tsv"))
     # Arrived particles are stored as empty 
     positions[positions.==""] .= config.goal["location"][1]
     positions = convert.(Float64, positions)
-    
-    x_pos = positions[1:2:end,:]
-    y_pos = positions[2:2:end,:]
 
-    x_node = Observable(x_pos[1,:])
-    y_node = Observable(y_pos[1,:])
-    fig, ax, s = scatter(
-        x_node,
-        y_node,
-        ms = 3,
-        color = Zissou[4],
-    )
-    xlims!(ax, (-1.5*maximum(x_pos[1,:]), 1.5*maximum(x_pos[1,:]) ) )
-    ylims!(ax, (-1.5*maximum(y_pos[1,:]), 1.5*maximum(y_pos[1,:])))
+    x_pos = positions[1:2:end, :]
+    y_pos = positions[2:2:end, :]
+
+    x_node = Observable(x_pos[1, :])
+    y_node = Observable(y_pos[1, :])
+    fig, ax, s = scatter(x_node, y_node, ms = 3, color = Zissou[4])
+    xlims!(ax, (-1.5 * maximum(x_pos[1, :]), 1.5 * maximum(x_pos[1, :])))
+    ylims!(ax, (-1.5 * maximum(y_pos[1, :]), 1.5 * maximum(y_pos[1, :])))
 
     scatter!(
         tuple(config.goal["location"]...);
@@ -136,9 +126,14 @@ function plot_animation_v2(
         markerspace = SceneSpace,
     )
     # ax.autolimitaspect = 1
-    record(fig, plotsdir("sr=$(sensing_range)_flow=$(flow_strength).mp4"), 1:2:size(x_pos)[1]; framerate = 30) do i
-        x_node[] = x_pos[i,:] 
-        y_node[] =  y_pos[i,:]
+    record(
+        fig,
+        plotsdir("sr=$(sensing_range)_flow=$(flow_strength).mp4"),
+        1:2:size(x_pos)[1];
+        framerate = 30,
+    ) do i
+        x_node[] = x_pos[i, :]
+        y_node[] = y_pos[i, :]
     end
 end
 
