@@ -5,7 +5,7 @@ using Interpolations, LinearAlgebra, JLD2, GLMakie, CairoMakie, Manifolds, MAT, 
 using Colors, PerceptualColourMaps
 export load_kappa_CDF, get_kappa
 export SimulationConfig, parse_config!, run_realisation, run_many_realisations
-export logmessage, filter_trajectories
+export logmessage, filter_trajectories, decompress_data
 export plot_stopping_time_heatmap, plot_animation_v2
 export get_flow_function
 export theme!
