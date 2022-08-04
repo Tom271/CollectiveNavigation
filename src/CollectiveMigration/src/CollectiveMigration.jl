@@ -4,6 +4,8 @@ using CodecZlib, DelimitedFiles, DataFrames, Dates, Distances, Distributions, Dr
 using Interpolations,
     LinearAlgebra, JLD2, GLMakie, CairoMakie, Manifolds, MAT, Parameters, Random
 using Colors, PerceptualColourMaps
+using Pipe: @pipe
+
 export load_kappa_CDF, get_kappa
 export SimulationConfig, parse_config!, run_realisation, run_many_realisations
 export logmessage, filter_trajectories, decompress_data
