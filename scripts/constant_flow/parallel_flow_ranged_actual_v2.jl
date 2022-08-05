@@ -9,7 +9,7 @@ const kappa_CDF, kappa_input = load_kappa_CDF();
 # Create default config
 # List of parameters to vary over as input to run_experiment
 config = SimulationConfig(
-    num_repeats = 10,
+    num_repeats = 50,
     flow = Dict("type" => "constant", "strength" => 0.0),
     sensing = Dict("type" => "ranged", "range" => 0.0),
     heading_perception = Dict("type" => "actual"),
