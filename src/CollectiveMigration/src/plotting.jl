@@ -6,6 +6,96 @@ update_theme!(
 
 Zissou = ["#3B9AB2", "#78B7C5", "#EBCC2A", "#E1AF00", "#F21A00"]
 
+function plot_averages(
+    df::DataFrame,
+    fixed_param::Pair{Symbol,T} where {T<:Real};
+    add_ribbon::Bool=true,
+    colors=cmap("D4"; N=9))
+    fig = Figure()
+    ax = Axis(fig[1, 1]; xlabel="Time", ylabel="Individuals Remaining",
+        title="$(string(fixed_param[1])) = $(fixed_param[2])")
+    arrival_times = @pipe df |>
+                          subset(_, fixed_param[1] => x -> x .== fixed_param[2]) |>
+                          groupby(_, [:coarse_time, :sensing_range]) |>
+                          combine(_, :individuals_remaining => mean, :individuals_remaining => std)
+
+    for (idx, sr) in enumerate(unique(arrival_times[!, :sensing_range]))
+        test = @pipe arrival_times |> subset(_, :sensing_range => x -> x .== sr)
+        mu_t = test[!, :individuals_remaining_mean]
+        sigma_t = test[!, :individuals_remaining_std]
+        t = test[!, :coarse_time]
+        # Plot Standard deviation ribbon
+        add_ribbon && band!(t, mu_t - sigma_t, mu_t + sigma_t; color=(colors[idx], 0.2))
+        lines!(t, mu_t; color=colors[idx], label=string(sr))
+    end
+
+    axislegend("Sensing Range"; merge=true)
+    limits = @pipe arrival_times |>
+                   subset(_, :individuals_remaining_mean => x -> ((x .> 0) .& (x .< 100))) |>
+                   combine(
+                       _,
+                       :coarse_time => minimum => :first_arrival,
+                       :coarse_time => maximum => :last_arrival
+                   )
+
+    xlims!(limits[1, :first_arrival], limits[1, :last_arrival])
+
+    return (fig, ax)
+end
+
+function plot_one_density(
+    df::DataFrame,
+    group::Symbol,
+    flow_strength::Real;
+    centiles::Vector{Int}=[99, 90, 75, 50, 25, 1, 0],
+    colors=cmap("D4"; N=9)
+)
+    param_vals = unique(df[!, group])
+    ylabels = string.(Int.(param_vals))
+    f = CairoMakie.Figure()
+    ax = CairoMakie.Axis(f[1, 1], yticks=((1:9) .* 0.02, ylabels))
+    for (idx, sensing_val) in enumerate(param_vals)
+        arrival_times = @pipe df |>
+                              get_arrival_times(_, [:sensing_range, :flow_strength]) |>
+                              subset(
+                                  _,
+                                  :sensing_range => x -> x .== sensing_val,
+                                  :flow_strength => x -> x .== flow_strength
+                              )
+
+        hist!(
+            ax,
+            arrival_times[!, :arrival_time_mean];
+            normalization=:pdf,
+            offset=idx * 0.02,
+            color=:slategray,
+            strokewidth=1,
+            strokearound=true,
+            bins=Base.range(0, stop=5000, length=500)
+        )
+
+        for (jdx, centile) in enumerate(centiles)
+            try
+                arrival = @pipe arrival_times |>
+                                get_centile_arrival(_; centile=centile)[1, :arrival_time_mean]
+                lines!(
+                    ax,
+                    [arrival, arrival],
+                    [idx, idx + 1] .* 0.02;
+                    color=colors[jdx],
+                    linestyle=(centile == 50) ? :solid : :dot,
+                    label=string.(100 - centile),
+                    linewidth=(centile == 50) ? 3 : 2
+                )
+                j += 1
+            catch e
+                continue
+            end
+        end
+    end
+    return (f, ax)
+end
+
 function plot_arrival_heatmap(
     arrival_times::DataFrame;
     save_plot=false,
