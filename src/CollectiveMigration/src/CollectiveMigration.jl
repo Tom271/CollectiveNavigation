@@ -1,8 +1,7 @@
 module CollectiveMigration
 
-using CodecZlib, DelimitedFiles, DataFrames, Dates, Distances, Distributions, DrWatson
-using Interpolations,
-    LinearAlgebra, JLD2, GLMakie, CairoMakie, Manifolds, MAT, Parameters, Random
+using DelimitedFiles, DataFrames, Dates, Distances, Distributions, DrWatson
+using Interpolations, LinearAlgebra, JLD2, Makie, GLMakie, CairoMakie, Manifolds, MAT, Parameters, Random
 using Colors, PerceptualColourMaps
 using Pipe: @pipe
 using ProgressBars
@@ -18,7 +17,7 @@ export get_sensing_kernel, find_neighbours
 export Zissou
 export get_stopping_times
 export get_mean_individuals_remaining, get_arrival_times, get_centile_arrival
-export make_failures_explicit, plot_arrival_heatmap
+export make_failures_explicit, plot_arrival_heatmap, plot_one_density, plot_averages
 include("circle_stats.jl")
 include("dynamics.jl")
 include("flows.jl")
