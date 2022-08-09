@@ -60,7 +60,8 @@ function plot_one_density(
                               subset(
                                   _,
                                   :sensing_range => x -> x .== sensing_val,
-                                  :flow_strength => x -> x .== flow_strength
+                                  :flow_strength => x -> x .== flow_strength,
+                                  :individuals_remaining => ByRow(<(100))
                               )
 
         hist!(
