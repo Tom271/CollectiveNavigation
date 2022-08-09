@@ -23,10 +23,10 @@ function logmessage(flow_value, sensing_value)
         savename(
             time,
             logdata;
-            connector = " | ",
-            equals = " = ",
-            sort = false,
-            digits = 2,
+            connector=" | ",
+            equals=" = ",
+            sort=false,
+            digits=2
         ),
     )
 end
@@ -44,8 +44,8 @@ end
 
 function filter_trajectories(
     lw_config::SimulationConfig;
-    sensing_range = missing,
-    flow_strength = missing,
+    sensing_range=missing,
+    flow_strength=missing
 )::Bool
     has_flow_strength =
         (flow_strength === missing) ? true : (lw_config.flow["strength"] == flow_strength)
@@ -63,20 +63,25 @@ of intended use cases.
 
 See also [`run_experiment`](@ref)
 """
-function decompress_data(compressed_df::DataFrame)::DataFrame
+function decompress_data(compressed_df::DataFrame; show_progress::Bool=true)::DataFrame
     df = DataFrame()
     i = 1
-    for row in ProgressBar(eachrow(compressed_df))
+    iter = show_progress ? ProgressBar(eachrow(compressed_df)) : eachrow(compressed_df)
+    for row in iter
         sensing_range = row.lw_config.sensing["range"]
+        sensing_type = row.lw_config.sensing["type"]
+        heading_perception = row.lw_config.heading_perception["type"]
         flow_strength = row.lw_config.flow["strength"]
         goal_tol = row.lw_config.goal["tolerance"]
         num_agents = row.lw_config.num_agents
 
         realisation_config = DataFrame(
-            sensing_range = fill(sensing_range, size(row.df)[1]),
-            flow_strength = fill(flow_strength, size(row.df)[1]),
-            goal_tol = fill(goal_tol, size(row.df)[1]),
-            num_agents = fill(num_agents, size(row.df)[1]),
+            sensing_range=fill(sensing_range, size(row.df)[1]),
+            flow_strength=fill(flow_strength, size(row.df)[1]),
+            goal_tol=fill(goal_tol, size(row.df)[1]),
+            num_agents=fill(num_agents, size(row.df)[1]),
+            sensing_type=fill(sensing_type, size(row.df)[1]),
+            heading_perception=fill(heading_perception, size(row.df)[1]),
         )
         temp = hcat(row.df, realisation_config)
         if i == 1
@@ -86,5 +91,5 @@ function decompress_data(compressed_df::DataFrame)::DataFrame
             df = vcat(df, temp)
         end
     end
-    return (df)
+    return df
 end
