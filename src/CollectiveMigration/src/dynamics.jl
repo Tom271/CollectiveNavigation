@@ -62,7 +62,7 @@ function check_arrivals(
     return arrived, average_distance_from_goal
 end
 
-function run_realisation(config::SimulationConfig; save_output::Bool = false)
+function run_realisation(config::SimulationConfig; save_output::Bool=false)
     # Code to do all run and tumble goodness
     # @unpack everything, basically `run_directed_group_with_removal`
     @unpack flow,
@@ -232,11 +232,11 @@ end
 
 function run_many_realisations(config)
     df = DataFrame()
-    for i ∈ 1:config.num_repeats
+    for i ∈ ProgressBar(1:config.num_repeats)
         if i == config.num_repeats
-            @time stats = run_realisation(config; save_output = true)
+            @time stats = run_realisation(config; save_output=true)
         else
-            @time stats = run_realisation(config; save_output = false)
+            @time stats = run_realisation(config; save_output=false)
         end
 
         stats["trial"] = i
