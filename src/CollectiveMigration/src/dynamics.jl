@@ -232,7 +232,7 @@ end
 
 function run_many_realisations(config)
     df = DataFrame()
-    for i ∈ ProgressBar(1:config.num_repeats)
+    for i ∈ 1:config.num_repeats
         if i == config.num_repeats
             @time stats = run_realisation(config; save_output=true)
         else

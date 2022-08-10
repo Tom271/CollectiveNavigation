@@ -1,6 +1,6 @@
 module CollectiveMigration
 
-using DelimitedFiles, DataFrames, Dates, Distributions, DrWatson
+using DelimitedFiles, DataFrames, Dates, Distances, Distributions, DrWatson
 using Interpolations, LinearAlgebra, JLD2, Makie, GLMakie, CairoMakie, Manifolds, MAT, Parameters, Random
 using Colors, PerceptualColourMaps
 using Pipe: @pipe
