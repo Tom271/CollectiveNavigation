@@ -16,13 +16,13 @@ function calculate_neighbour_distance(agent_to_update::Int64, current_pos::Matri
     return nbhr_dist
 end
 
-function calculate_neighbour_distance_old(agent_to_update::Int64, current_pos::Matrix{Float64})
-    distances = pairwise(euclidean, current_pos)
-    # Prevent self-interaction, you are not your own neighbour! 
-    distances[agent_to_update, agent_to_update] = 1E6
-    nbhr_dist = distances[agent_to_update, :]
-    return nbhr_dist
-end
+# function calculate_neighbour_distance_old(agent_to_update::Int64, current_pos::Matrix{Float64})
+#     distances = pairwise(euclidean, current_pos)
+#     # Prevent self-interaction, you are not your own neighbour! 
+#     distances[agent_to_update, agent_to_update] = 1E6
+#     nbhr_dist = distances[agent_to_update, :]
+#     return nbhr_dist
+# end
 
 function find_neighbours_in_range(
     agent_to_update::Int64,
