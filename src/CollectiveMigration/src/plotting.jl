@@ -70,8 +70,8 @@ function plot_one_density(
             normalization=:pdf,
             offset=idx * 0.02,
             color=:slategray,
-            strokewidth=1,
-            strokearound=true,
+            # strokewidth=1,
+            # strokearound=true,
             bins=Base.range(0, stop=5000, length=500)
         )
 
