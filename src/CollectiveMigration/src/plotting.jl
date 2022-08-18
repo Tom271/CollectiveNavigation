@@ -26,7 +26,12 @@ function plot_averages(
         t = test[!, :coarse_time]
         # Plot Standard deviation ribbon
         add_ribbon && band!(t, mu_t - sigma_t, mu_t + sigma_t; color=(colors[idx], 0.2))
-        lines!(t, mu_t; color=colors[idx], label=string(sr))
+        lines!(
+            t,
+            mu_t;
+            color=colors[idx],
+            label=(sr == 0.0) ? "Individual" : string(sr),
+            linestyle=(sr == 0.0) ? :dot : :solid)
     end
 
     axislegend("Sensing Range"; merge=true)
@@ -116,9 +121,11 @@ function plot_arrival_heatmap(
             xlabel="Flow Strength",
             ylabel="Sensing Range",
             xticks=(1:length(xlabels), string.(xlabels)),
-            yticks=(1:length(ylabels), string.(ylabels))
+            yticks=(1:length(ylabels), ["Individual", string.(Int.(ylabels))[begin+1:end]...])
         )
     )
+    hlines!(1.5; color=:white, linewidth=1.5)
+    vlines!([5.5, 6.5]; color=:white, linewidth=1.5)
     ref_point = @pipe arrival_times |>
                       subset(
         _,
