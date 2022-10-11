@@ -54,6 +54,8 @@ function filter_trajectories(
     has_sensing_range && has_flow_strength
 end
 
+
+
 """
     decompress_data(compressed_df::DataFrame)
 Decompress the output of `run_experiment` into a long tidy form.

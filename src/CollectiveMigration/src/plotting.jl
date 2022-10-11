@@ -277,7 +277,7 @@ function plot_animation_v2(df::DataFrame; sensing_range=missing, flow_strength=m
         color=Zissou[5],
         markerspace=SceneSpace
     )
-    # ax.autolimitaspect = 1
+    ax.autolimitaspect = 1
     record(
         fig,
         plotsdir("sr=$(sensing_range)_flow=$(flow_strength).mp4"),

@@ -1,11 +1,25 @@
+function hycom_flow(
+    t::Real,
+    x::Real,
+    y::Real,
+    strength::Float64,
+    h::Any # Should be HYCOM_Flow when in package.
+)::(Vector{T} where {T<:Real})
+    # (x,y,t) are coordinates in data axis, we need to convert
+    # to lat/long/date
+    long = h.x_to_long(x)
+    lat = h.y_to_lat(y)
+    unix_t = h.t_to_date(t)
+    return (strength / h.max_strength) .* [h.interp_u(long, lat, unix_t); h.interp_v(long, lat, unix_t)]
+end
 
 function vortex_flow(
     t::Real,
     x::Real,
     y::Real;
-    strength::Real = 1.0,
-    left_bound::Real = 0.0,
-    right_bound::Real = 10.0,
+    strength::Real=1.0,
+    left_bound::Real=0.0,
+    right_bound::Real=10.0
 )::(Vector{T} where {T<:Real})
     flow = 0.5 * (1 - tanh(0.1 * x^2 + 0.1 * y^2 - 10))
 
@@ -16,10 +30,10 @@ function annulus_flow(
     t::Real,
     x::Real,
     y::Real;
-    strength::Real = 1.0,
-    inner_radius::Real = 2.0,
-    outer_radius::Real = 5.0,
-    noise::Real = 0.0,
+    strength::Real=1.0,
+    inner_radius::Real=2.0,
+    outer_radius::Real=5.0,
+    noise::Real=0.0
 )::(Vector{T} where {T<:Real})
     noise_xy = noise .* randn(Float64, 2)
     r = sqrt(x^2 + y^2)
@@ -37,10 +51,10 @@ function vertical_stream(
     t::Real,
     x::Real,
     y::Real;
-    strength::Real = 1.0,
-    left_bound::Real = -10000.0,
-    right_bound::Real = 10000.0,
-    noise::Real = 0.0,
+    strength::Real=1.0,
+    left_bound::Real=-10000.0,
+    right_bound::Real=10000.0,
+    noise::Real=0.0
 )::(Vector{T} where {T<:Real})
     noise_xy = noise .* randn(Float64, 2)
     if x <= left_bound || x >= right_bound
@@ -53,10 +67,10 @@ function smooth_vertical_stream(
     t::Real,
     x::Real,
     y::Real;
-    strength::Real = 1.0,
-    w_1::Real = 0.0,
-    w_2::Real = 0.0,
-    noise::Real = 0.0,
+    strength::Real=1.0,
+    w_1::Real=0.0,
+    w_2::Real=0.0,
+    noise::Real=0.0
 )::(Vector{T} where {T<:Real})
     noise_xy = noise .* randn(Float64, 2)
     return (tanh(x .- w_1) - tanh(x .- w_2)) * [0.0; strength] + noise_xy
@@ -66,10 +80,10 @@ function horizontal_stream(
     t::Real,
     x::Real,
     y::Real;
-    strength::Real = 1.0,
-    lower_bound::Real = 0.0,
-    upper_bound::Real = 10.0,
-    noise::Real = 0.0,
+    strength::Real=1.0,
+    lower_bound::Real=0.0,
+    upper_bound::Real=10.0,
+    noise::Real=0.0
 )::(Vector{T} where {T<:Real})
     noise_xy = noise .* randn(Float64, 2)
     if y <= lower_bound || y >= upper_bound
@@ -113,6 +127,7 @@ function get_flow_function(flow::Dict{String,Any})
         "horizontal_stream" => (t, x, y) -> horizontal_stream(t, x, y; kw...),
         "smooth_vertical_stream" => (t, x, y) -> smooth_vertical_stream(t, x, y; kw...),
         "constant" => get_flow_function(flow["strength"]),
+        "hycom" => (t, x, y) -> hycom_flow(t, x, y, flow["strength"], flow["config"]),
     )
     return flow_functions[flow_name]
 end
@@ -122,7 +137,7 @@ function get_flow_function(flow_func)
 end
 
 
-function plot_flow_field(flow_func; t = 0, x = -10:1:10, y = -10:1:10)
+function plot_flow_field(flow_func; t=0, x=-10:1:10, y=-10:1:10)
     X = x' .* ones(length(y))
     Y = ones(length(x))' .* y
     # flow_func_tuple = (x,y) -> tuple(flow_func(0,x,y)...)
@@ -133,10 +148,10 @@ function plot_flow_field(flow_func; t = 0, x = -10:1:10, y = -10:1:10)
     n = vec(norm.(Vec2f.(u, v)))
     U = reshape(u, length(y), length(x))
     V = reshape(v, length(y), length(x))
-    arrows(vec(Point2f.(X, Y)), vec(Point2f.(U, V)), arrowsize = 10 * n, arrowcolour = n)
+    arrows(vec(Point2f.(X, Y)), vec(Point2f.(U, V)), arrowsize=10 * n, arrowcolour=n)
 end
 
-function plot_flow_field!(flow_func; t = 0, x = -10:1.0:10, y = -10:1.0:10)
+function plot_flow_field!(flow_func; t=0, x=-10:1.0:10, y=-10:1.0:10)
     X = x' .* ones(length(y))
     Y = ones(length(x))' .* y
     # flow_func_tuple = (x,y) -> tuple(flow_func(0,x,y)...)
@@ -147,5 +162,5 @@ function plot_flow_field!(flow_func; t = 0, x = -10:1.0:10, y = -10:1.0:10)
     n = vec(norm.(Vec2f.(u, v)))
     U = reshape(u, length(y), length(x))
     V = reshape(v, length(y), length(x))
-    arrows!(vec(Point2f.(X, Y)), vec(Point2f.(U, V)), arrowsize = 10 * n, arrowcolour = n)
+    arrows!(vec(Point2f.(X, Y)), vec(Point2f.(U, V)), arrowsize=10 * n, arrowcolour=n)
 end
