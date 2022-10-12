@@ -13,6 +13,23 @@ function hycom_flow(
     return (strength / h.max_strength) .* [h.interp_u(long, lat, unix_t); h.interp_v(long, lat, unix_t)]
 end
 
+function hybrid_flow(
+    t::Real,
+    x::Real,
+    y::Real,
+    strength::Float64,
+    h::Any # Should be HYCOM_Flow when in package.
+)::(Vector{T} where {T<:Real})
+    # (x,y,t) are coordinates in data axis, we need to convert
+    # to lat/long/date
+    long = h.x_to_long(x)
+    lat = h.y_to_lat(y)
+    unix_t = h.t_to_date(t)
+    hycom = (strength / h.max_strength) .* [h.interp_u(long, lat, unix_t); h.interp_v(long, lat, unix_t)]
+    linear = 
+    return 
+end
+
 function vortex_flow(
     t::Real,
     x::Real,
@@ -128,6 +145,7 @@ function get_flow_function(flow::Dict{String,Any})
         "smooth_vertical_stream" => (t, x, y) -> smooth_vertical_stream(t, x, y; kw...),
         "constant" => get_flow_function(flow["strength"]),
         "hycom" => (t, x, y) -> hycom_flow(t, x, y, flow["strength"], flow["config"]),
+        "hybrid" => (t,x,y) -> (1-flow["lambda"])*get_flow_function(flow["strength"]) + flow["lambda"]*hycom_flow(t, x, y, flow["strength"], flow["config"]),
     )
     return flow_functions[flow_name]
 end
