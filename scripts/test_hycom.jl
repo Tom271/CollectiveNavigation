@@ -11,8 +11,8 @@ Base.@kwdef mutable struct HYCOM_Flow
     min_lev::Float64 = 0.0
     max_lev::Float64 = 0.0
     max_strength::Float64 = 1.0
-    start_time::String = "2021-12-31T00:00:00Z"
-    end_time::String = "2022-06-30T00:00:00Z"
+    start_time::String = "2005-04-13T00:00:00Z"
+    end_time::String = "2005-06-07T00:00:00Z"
     filetype::String = "nc"
     interp_u::Any = nothing
     interp_v::Any = nothing
@@ -43,9 +43,9 @@ function get_flow_data(h::HYCOM_Flow)
 end
 
 h = HYCOM_Flow(
-    name="n_atlantic_large",
-    start_time="2022-04-01T00:00:00Z",
-    end_time="2022-06-30T00:00:00Z",
+    name="n_atlantic_sei_whale",
+    start_time="2005-04-13T00:00:00Z"
+    end_time = "2005-06-07T00:00:00Z",
     min_lat=33.99931,
     max_lat=59.77051,
     min_long=360 - 27.88356,
