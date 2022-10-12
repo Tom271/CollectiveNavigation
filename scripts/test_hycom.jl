@@ -44,8 +44,8 @@ end
 
 h = HYCOM_Flow(
     name="n_atlantic_sei_whale",
-    start_time="2005-04-13T00:00:00Z",
-    end_time = "2005-06-07T00:00:00Z",
+    start_time="2021-04-13T00:00:00Z",
+    end_time = "2021-06-07T00:00:00Z",
     min_lat=33.99931,
     max_lat=59.77051,
     min_long=360 - 27.88356,
