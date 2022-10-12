@@ -56,8 +56,10 @@ config, dl_path = get_flow_data(h);
 u_vel = ncread(dl_path, "water_u");
 v_vel = ncread(dl_path, "water_v");
 # Drop LEV # Rotate 90 degrees
-v_vel = u_vel[:, :, 1, :]
-u_vel = v_vel[:, :, 1, :]
+v_vel_rotate = u_vel[:, :, 1, :];
+u_vel_rotate = v_vel[:, :, 1, :];
+u_vel = u_vel_rotate
+v_vel= v_vel_rotate
 h.max_strength = sqrt.(maximum(u_vel .^ 2 + v_vel .^ 2))
 
 lat = ncread(dl_path, "latitude");
