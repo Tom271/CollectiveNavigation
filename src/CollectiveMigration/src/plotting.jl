@@ -255,7 +255,7 @@ function plot_animation_v2(df::DataFrame; sensing_range=missing, flow_strength=m
     )
 
     config = traj.lw_config[1]
-    @show config
+    # @show config
 
     positions = readdlm(joinpath(config.save_dir, config.save_name * ".tsv"))
     # Arrived particles are stored as empty 

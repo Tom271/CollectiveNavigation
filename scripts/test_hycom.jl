@@ -19,6 +19,7 @@ Base.@kwdef mutable struct HYCOM_Flow
     x_to_long::Any = nothing
     y_to_lat::Any = nothing
     t_to_date::Any = nothing
+    api_query::String = ""
 end
 function get_flow_data(h::HYCOM_Flow)
     prog_bar(total::Int, now::Int) = print("\r $(round(now/1000000, digits=1))MB downloaded")
