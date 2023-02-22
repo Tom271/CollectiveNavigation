@@ -1,6 +1,6 @@
 function get_initial_condition(initial_condition, num_agents)
     initial_pos::Matrix{Float64} =
-        get_initial_position("box"; bounds=[280, 320, -20, 20], num_agents=num_agents)
+        get_initial_position("box"; bounds=[-20, 20, 280, 320], num_agents=num_agents)
     current_headings::Vector{Float64} =
         get_initial_heading("sector"; bounds=[0, 2π], num_agents=num_agents)
     return (initial_pos, current_headings)
