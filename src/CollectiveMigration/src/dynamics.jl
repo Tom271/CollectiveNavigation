@@ -262,5 +262,11 @@ function run_many_realisations(config)
     lw_config = deepcopy(config)
     lw_config.kappa_CDF = nothing
     lw_config.kappa_input = nothing
+    lw_config.flow["config"].y_to_lat = nothing
+    lw_config.flow["config"].x_to_long = nothing
+    lw_config.flow["config"].t_to_date = nothing
+    lw_config.flow["config"].interp_u = nothing
+    lw_config.flow["config"].interp_v = nothing
+    lw_config.flow["config"].raw = nothing
     return @strdict(lw_config, df)
 end
