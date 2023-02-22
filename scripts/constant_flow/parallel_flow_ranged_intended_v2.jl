@@ -3,8 +3,8 @@ Standard configuration, averaged over 10 realisations. Ranged and Nearest neighb
 interactions. 
 =#
 using DrWatson
-using DelimitedFiles
 @quickactivate :CollectiveNavigation
+using DelimitedFiles
 const kappa_CDF, kappa_input = load_kappa_CDF();
 # Create default config
 # List of parameters to vary over as input to run_experiment
