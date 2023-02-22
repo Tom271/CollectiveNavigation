@@ -46,7 +46,7 @@ end
 h = HYCOM_Flow(
     name="n_atlantic_sei_whale",
     start_time="2021-04-13T00:00:00Z",
-    end_time = "2021-06-07T00:00:00Z",
+    end_time="2021-06-07T00:00:00Z",
     min_lat=33.99931,
     max_lat=59.77051,
     min_long=360 - 27.88356,
@@ -60,7 +60,7 @@ v_vel = ncread(dl_path, "water_v");
 v_vel_rotate = u_vel[:, :, 1, :];
 u_vel_rotate = v_vel[:, :, 1, :];
 u_vel = u_vel_rotate
-v_vel= v_vel_rotate
+v_vel = v_vel_rotate
 h.max_strength = sqrt.(maximum(u_vel .^ 2 + v_vel .^ 2))
 
 lat = ncread(dl_path, "latitude");
@@ -120,14 +120,14 @@ config = SimulationConfig(
     heading_perception=Dict("type" => "intended"),
     terminal_time=5000,
 );
-sensing_values = [0.0, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 500.0];
+sensing_values = [0.0, 1.0] #, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 500.0];
 parse_config!(config);
 ## Run simulation or load data from file if it exists.
 hycom_flow_data = run_experiment(
     config,
     :flow,
     :sensing;
-    flow_values=0.0:0.1:0.5,
+    flow_values=[1.0],
     sensing_values=sensing_values,
     show_log=true
 )
@@ -136,10 +136,10 @@ df = decompress_data(hycom_flow_data)
 ## REALISATIONS
 sr = 500.0
 reduced_df = @pipe df |>
-                #    subset(
-                #        _,
-                #        :sensing_range => x -> x .== (sr),
-                #    ) |>
+                   #    subset(
+                   #        _,
+                   #        :sensing_range => x -> x .== (sr),
+                   #    ) |>
                    groupby(_, [:sensing_range, :trial]);
 f = Figure()
 ax = Axis(f[1, 1], xlabel="Time", ylabel="Individuals Remaining",
@@ -153,7 +153,7 @@ for trial in reduced_df
         linewidth=0.5
     )
 end
-
+save(plotsdir("hycom_ind_rem.png"), f)
 arrival_times = @pipe df |>
                       get_arrival_times(_, [:sensing_range, :flow_strength]);
 median_arrival = get_centile_arrival(arrival_times; centile=50);
@@ -163,41 +163,91 @@ xlabels = unique(arrival_times[!, :flow_strength])
 ylabels = unique(arrival_times[!, :sensing_range])
 sort!(arrival_times, [:sensing_range, :flow_strength])
 Z = reshape(arrival_times[!, :arrival_time_mean], (length(xlabels), length(ylabels)))
-logged=true
-normalised=true
+logged = true
+normalised = true
 fig, ax, hm = GLMakie.heatmap(
-        1:length(xlabels),
-        1:length(ylabels),
-        logged ? log.(Z) : Z;
-        colormap=cmap("D4"),
-        axis=(;
-            xlabel="Flow Strength",
-            ylabel="Sensing Range",
-            xticks=(1:length(xlabels), string.(xlabels)),
-            yticks=(1:length(ylabels), ["Individual", string.(Int.(ylabels))[begin+1:end]...])
-        )
+    1:length(xlabels),
+    1:length(ylabels),
+    logged ? log.(Z) : Z;
+    colormap=cmap("D4"),
+    axis=(;
+        xlabel="Flow Strength",
+        ylabel="Sensing Range",
+        xticks=(1:length(xlabels), string.(xlabels)),
+        yticks=(1:length(ylabels), ["Individual", string.(Int.(ylabels))[begin+1:end]...])
     )
-    ref_point = @pipe arrival_times |>
-                      subset(
-        _,
-        :sensing_range => ByRow(==(0)),
-        :flow_strength => ByRow(==(0.0))
-    )
-    normalZ = Z ./ ref_point[1, :arrival_time_mean]
-    normalZ = [ismissing(i) ? 0 : i for i ∈ normalZ]
-    Z = [ismissing(i) ? 0 : i for i ∈ Z]
-    Z = convert.(Int64, round.(Z))
-    labels = string.(normalised ? round.(normalZ, sigdigits=2) : Z)
-    text!(
-        labels[:],
-        position=Point.((1:length(xlabels)), (1:length(ylabels))')[:],
-        align=(:center, :baseline),
-        color=:white,
-        textsize=normalised ? 20 : 15
-    )
-    c = Colorbar(
-        fig[1, 2],
-        hm,
-        label="Stopping Time",
-        tickformat=xs -> ["$(round(Int64,exp(x)))" for x in xs]
-    )
+)
+ref_point = @pipe arrival_times |>
+                  subset(
+    _,
+    :sensing_range => ByRow(==(0)),
+    :flow_strength => ByRow(==(0.0))
+)
+normalZ = Z ./ ref_point[1, :arrival_time_mean]
+normalZ = [ismissing(i) ? 0 : i for i ∈ normalZ]
+Z = [ismissing(i) ? 0 : i for i ∈ Z]
+Z = convert.(Int64, round.(Z))
+labels = string.(normalised ? round.(normalZ, sigdigits=2) : Z)
+text!(
+    labels[:],
+    position=Point.((1:length(xlabels)), (1:length(ylabels))')[:],
+    align=(:center, :baseline),
+    color=:white,
+    textsize=normalised ? 20 : 15
+)
+c = Colorbar(
+    fig[1, 2],
+    hm,
+    label="Stopping Time",
+    tickformat=xs -> ["$(round(Int64,exp(x)))" for x in xs]
+)
+save(plotsdir("hycom_1.png"), fig)
+
+using DelimitedFiles
+positions = readdlm(datadir("position_data", "2022_10_12_16_47_46.tsv"));
+positions[positions.==""] .= 0
+positions = convert.(Float64, positions)
+flow_test = get_flow_function(flow_dic)
+x_pos = positions[1:2:end, :]
+y_pos = positions[2:2:end, :]
+
+x_node = Observable(x_pos[1, :])
+y_node = Observable(y_pos[1, :])
+u = Observable([flow_test(0, x, y)[1] for x in -10:0.5:399, y in -50:0.5:50]);
+v = Observable([flow_test(0, x, y)[2] for x in -10:0.5:399, y in -50:0.5:50]);
+
+strength = Observable(sqrt.(u[] .^ 2.0 .+ v[] .^ 2.0))
+fig = Figure(resolution=(1920, 550))
+ax = Axis(fig[1, 1]; aspect=500 / 100)
+hm = heatmap!(ax,
+    -10:0.5:399,
+    -50:0.5:50,
+    strength
+);
+s = scatter!(x_node, y_node, ms=3, color=:red)
+
+xlims!(ax, (-10, 400))
+
+ylims!(ax, (-50, 50))
+
+scatter!(
+    (0, 0);
+    markersize=2 * 10,
+    color=:blue,
+    markerspace=SceneSpace
+)
+
+record(
+    fig,
+    plotsdir("test_full_hycom_high_strength.mp4"),
+    1:20:size(x_pos)[1];
+    framerate=30
+) do i
+    x_node[] = x_pos[i, :]
+    y_node[] = y_pos[i, :]
+    u[] = [flow_test(i * 5000 / size(x_pos)[1], x, y)[1] for x in -10:0.5:399, y in -50:0.5:50]
+    v[] = [flow_test(i * 5000 / size(x_pos)[1], x, y)[2] for x in -10:0.5:399, y in -50:0.5:50]
+    strength[] = sqrt.(u[] .^ 2.0 .+ v[] .^ 2.0)
+    ax.title[] = string(i)
+end
+
