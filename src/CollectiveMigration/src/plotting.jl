@@ -124,8 +124,8 @@ function plot_arrival_heatmap(
             yticks=(1:length(ylabels), ["Individual", string.(Int.(ylabels))[begin+1:end]...])
         )
     )
-    hlines!(1.5; color=:white, linewidth=1.5)
-    vlines!([5.5, 6.5]; color=:white, linewidth=1.5)
+    # hlines!(1.5; color=:white, linewidth=1.5)
+    # vlines!([5.5, 6.5]; color=:white, linewidth=1.5)
     ref_point = @pipe arrival_times |>
                       subset(
         _,
@@ -336,3 +336,57 @@ function plot_group!(
     return nothing
 end
 
+function plot_hycom_data()
+    params = HYCOM_Parameters(
+        name="n_atlantic_whole",
+        start_time="2021-04-13T00:00:00Z",
+        end_time="2021-04-15T00:00:00Z",
+        min_lat=29,
+        max_lat=69,
+        min_long=296,
+        max_long=360,
+    )
+    flow_config, dl_path = get_flow_data(params)
+    h = HYCOM_Flow_Data(params)
+    h, params = sanitise_flow_data!(params, dl_path)
+
+    time_point = 1
+    worldCountries = GeoJSON.read(read("medium_custom.geo.json", String))
+    fig = Figure(resolution=(1200, 800))
+    ga = GeoMakie.GeoAxis(
+        fig[1, 1]; # any cell of the figure's layout
+        # source="+proj=longlat +datum=WGS84",
+        # lonlims ="automatic",
+        dest="+proj=longlat" # the CRS in which you want to plot
+        # coastlines=true # plot coastlines from Natural Earth, as a reference.
+    )
+    long = h.raw[1] .- 360 # shift to align with map
+    lat = h.raw[2]
+    u_vel = h.raw[4][:, :, time_point]
+    v_vel = h.raw[5][:, :, time_point]
+
+    hm = heatmap!(
+        ga,
+        long,
+        lat,
+        log.(sqrt.(u_vel .^ 2 + v_vel .^ 2));
+        colormap=colormap("Purples")
+    )
+    hm2 = poly!(
+        ga, worldCountries;
+        strokecolor=:black,
+        color=:white,
+        strokewidth=0.5
+    )
+
+
+    ga.xlabel = "Longitude"
+    ga.ylabel = "Latitude"
+    xlims!(0.92 * minimum(long,), 1.08 * maximum(long,))
+    ylims!(0.85 * minimum(lat,), 1.15 * maximum(lat,))
+    ga.xticks = 360 .+ round.(0.92*minimum(long,):10:1.08*maximum(long,)) # shift back coord
+    ga.xtickformat = "{:d}°"
+    ga.yticks = round.(0.85*minimum(lat,):10:1.15*maximum(lat,))
+    ga.ytickformat = "{:d}°"
+    fig
+end
