@@ -8,7 +8,7 @@ by `decompress_data`
 
 See also [`decompress_data`](@ref)
 """
-function get_mean_individuals_remaining(df::DataFrame, groups::Vector{Symbol})::DataFrame
+function get_mean_individuals_remaining(df::AbstractDataFrame, groups::Vector{Symbol})::DataFrame
     @pipe df |>
           groupby(_, [:coarse_time, groups...]) |>
           combine(_, :individuals_remaining => mean, :individuals_remaining => std)
@@ -25,7 +25,7 @@ deviation.
 
 See also [`get_mean_individuals_remaining`](@ref)
 """
-function get_arrival_times(df::DataFrame, groups::Vector{Symbol})
+function get_arrival_times(df::AbstractDataFrame, groups::Vector{Symbol})
     arrival_times = df
     # Round remaining individuals to integer (fixes non-smooth line issue)
     # Done like this it also converst the column type to Integer (rather than Float64)
@@ -53,7 +53,7 @@ given. Defaults to the median. Should be variable based on `num_agents`.
 
 See also [`get_arrival_times`](@ref)
 """
-function get_centile_arrival(arrival_times::DataFrame; centile::Int=50)
+function get_centile_arrival(arrival_times::AbstractDataFrame; centile::Int=50)
     @pipe arrival_times |>
           # Remove time when no individuals have arrived (should be variable: num_agents)
           subset(_, :individuals_remaining => x -> x .< 100) |>
@@ -75,7 +75,7 @@ of `groups` have been used*. This is as expected from `run_experiment`
 See also [`run_experiment`](@ref),[`get_arrival_times`](@ref)
 """
 function make_failures_explicit(
-    arrival_times::DataFrame,
+    arrival_times::AbstractDataFrame,
     df::DataFrame,
     groups::Vector{Symbol},
 )::DataFrame
