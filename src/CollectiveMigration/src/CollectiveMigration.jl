@@ -12,7 +12,7 @@ export logmessage, filter_trajectories, decompress_data
 export HYCOM_Parameters, get_flow_data, HYCOM_Flow_Data, sanitise_flow_data!, build_interpolants!
 export plot_stopping_time_heatmap, plot_animation_v2
 export get_flow_function
-export theme!
+# export theme!
 export plot_individual!, plot_group!, circ_resultant
 export get_sensing_kernel, find_neighbours
 export Zissou
