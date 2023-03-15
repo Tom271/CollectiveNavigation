@@ -12,7 +12,9 @@ function plot_averages(
     add_ribbon::Bool=true,
     add_title::Bool=true,
     colors=cmap("D4"; N=9))
-    fig = CairoMakie.Figure()
+    size_inches = (4, 3)
+    size_pt = 72 .* size_inches
+    fig = CairoMakie.Figure(resolution=size_pt, fontsize=12)
     ax = CairoMakie.Axis(fig[1, 1]; xlabel="Time", ylabel="Individuals Remaining",
         title=(add_title) ? "$(string(fixed_param[1])) = $(fixed_param[2])" : " ")
     arrival_times = @pipe df |>
@@ -34,8 +36,8 @@ function plot_averages(
             label=(sr == 0.0) ? "Individual" : string(sr),
             linestyle=(sr == 0.0) ? :solid : :solid)
     end
-
-    axislegend("Sensing Range"; merge=true)
+    leg = Legend(fig[1, 2], ax, "Sensing Range"; merge=true, unique=true, patchsize=(10, 0.5))
+    leg.tellheight = true
     limits = @pipe arrival_times |>
                    subset(_, :individuals_remaining_mean => x -> ((x .> 0) .& (x .< 100))) |>
                    combine(
@@ -58,7 +60,7 @@ function plot_one_density(
 )
     param_vals = unique(df[!, group])
     ylabels = string.(Int.(param_vals))
-    size_inches = (4, 3)
+    size_inches = (3.25, 3.25 * (3 / 4))
     size_pt = 72 .* size_inches
     f = CairoMakie.Figure(resolution=size_pt, fontsize=12)
     ax = CairoMakie.Axis(f[1, 1], yticks=((1:9) .* 0.02, ylabels))
@@ -127,8 +129,8 @@ function plot_arrival_heatmap(
             yticks=(1:length(ylabels), ["Individual", string.(Int.(ylabels))[begin+1:end]...])
         )
     )
-    # hlines!(1.5; color=:white, linewidth=1.5)
-    # vlines!([5.5, 6.5]; color=:white, linewidth=1.5)
+    hlines!(1.5; color=:white, linewidth=1.5)
+    vlines!([5.5, 6.5]; color=:white, linewidth=1.5)
     ref_point = @pipe arrival_times |>
                       subset(
         _,
@@ -145,7 +147,7 @@ function plot_arrival_heatmap(
         position=Point.((1:length(xlabels)), (1:length(ylabels))')[:],
         align=(:center, :baseline),
         color=:white,
-        textsize=normalised ? 20 : 15
+        fontsize=normalised ? 20 : 15
     )
     c = Colorbar(
         fig[1, 2],
@@ -208,7 +210,7 @@ function arrivaltimeheatmap(stopping_times; logged=true, normalised=true)
         position=Point.((1:length(xlabels))', (1:length(ylabels)))[:],
         align=(:center, :baseline),
         color=:white,
-        textsize=normalised ? 20 : 15,
+        fontsize=normalised ? 20 : 15,
     )
     c = Colorbar(
         fig[1, 2],
