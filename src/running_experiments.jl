@@ -40,7 +40,7 @@ function run_experiment(
             setproperty!(config, sensing_param, sense_dict)
             # safe save not necessary as realisations are averaged over
             file, path = produce_or_load(
-                datadir("realisation_data"),
+                String(datadir("realisation_data")),
                 config,
                 run_many_realisations;
                 verbose=false
@@ -76,16 +76,17 @@ function run_experiment_one_param(
         sense_dict["range"] = sensing_value
         setproperty!(config, sensing_param, sense_dict)
         # safe save not necessary as realisations are averaged over
-        file, path = produce_or_load(
-            datadir("realisation_data_met_rob"),
+        data, file = produce_or_load(
+            String(datadir("realisation_data_met_rob")),
             config,
             run_many_realisations;
-            verbose=false
+            verbose=true
         )
         if sensing_value == sensing_values[1]
-            df = DataFrame(file)
+            df = DataFrame(data)
         else
-            append!(df, file)
+
+            append!(df, data)
         end
     end
 
