@@ -1,19 +1,20 @@
-CairoMakie.set_theme!(theme_minimal())
-update_theme!(
-    Lines=(linewidth=4,),
-    palette=(color=["#5BBCD6", "#F98400", "#F2AD00", "#00A08A", "#FF0000"],),
-)
+# CairoMakie.set_theme!(theme_minimal())
+# update_theme!(
+#     Lines=(linewidth=4,),
+#     palette=(color=["#5BBCD6", "#F98400", "#F2AD00", "#00A08A", "#FF0000"],),
+# )
 
 Zissou = ["#3B9AB2", "#78B7C5", "#EBCC2A", "#E1AF00", "#F21A00"]
 
 function plot_averages(
-    df::DataFrame,
+    df::AbstractDataFrame,
     fixed_param::Pair{Symbol,T} where {T<:Real};
     add_ribbon::Bool=true,
+    add_title::Bool=true,
     colors=cmap("D4"; N=9))
-    fig = Figure()
-    ax = Axis(fig[1, 1]; xlabel="Time", ylabel="Individuals Remaining",
-        title="$(string(fixed_param[1])) = $(fixed_param[2])")
+    fig = CairoMakie.Figure()
+    ax = CairoMakie.Axis(fig[1, 1]; xlabel="Time", ylabel="Individuals Remaining",
+        title=(add_title) ? "$(string(fixed_param[1])) = $(fixed_param[2])" : " ")
     arrival_times = @pipe df |>
                           subset(_, fixed_param[1] => x -> x .== fixed_param[2]) |>
                           groupby(_, [:coarse_time, :sensing_range]) |>
@@ -25,13 +26,13 @@ function plot_averages(
         sigma_t = test[!, :individuals_remaining_std]
         t = test[!, :coarse_time]
         # Plot Standard deviation ribbon
-        add_ribbon && band!(t, mu_t - sigma_t, mu_t + sigma_t; color=(colors[idx], 0.2))
-        lines!(
+        add_ribbon && CairoMakie.band!(t, mu_t - sigma_t, mu_t + sigma_t; color=(colors[idx], 0.2))
+        CairoMakie.lines!(
             t,
             mu_t;
             color=colors[idx],
             label=(sr == 0.0) ? "Individual" : string(sr),
-            linestyle=(sr == 0.0) ? :dot : :solid)
+            linestyle=(sr == 0.0) ? :solid : :solid)
     end
 
     axislegend("Sensing Range"; merge=true)
@@ -49,7 +50,7 @@ function plot_averages(
 end
 
 function plot_one_density(
-    df::DataFrame,
+    df::AbstractDataFrame,
     group::Symbol,
     flow_strength::Real;
     centiles::Vector{Int}=[99, 90, 75, 50, 25, 1, 0],
@@ -57,7 +58,9 @@ function plot_one_density(
 )
     param_vals = unique(df[!, group])
     ylabels = string.(Int.(param_vals))
-    f = CairoMakie.Figure()
+    size_inches = (4, 3)
+    size_pt = 72 .* size_inches
+    f = CairoMakie.Figure(resolution=size_pt, fontsize=12)
     ax = CairoMakie.Axis(f[1, 1], yticks=((1:9) .* 0.02, ylabels))
     for (idx, sensing_val) in enumerate(param_vals)
         arrival_times = @pipe df |>
@@ -103,7 +106,7 @@ function plot_one_density(
 end
 
 function plot_arrival_heatmap(
-    arrival_times::DataFrame;
+    arrival_times::AbstractDataFrame;
     save_plot=false,
     logged=true,
     normalised=true
@@ -164,7 +167,7 @@ function get_stopping_time(avg_df, stat, fraction_arrived)
     return isnothing(idx) ? missing : avg_df.coarse_time[idx]
 end
 
-function get_stopping_times(results::DataFrame; fraction_arrived=0.9)
+function get_stopping_times(results::AbstractDataFrame; fraction_arrived=0.9)
     return select(
         results,
         :lw_config => ByRow(x -> x.flow["strength"]) => :flow_strength,
