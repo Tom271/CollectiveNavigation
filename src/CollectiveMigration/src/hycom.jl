@@ -56,17 +56,17 @@ function get_flow_data(h::HYCOM_Parameters)
     if file_exists(h)
         # Open file and get data filepath
         config = nothing
-        open(datadir("flow_data", "$(h.name).json"), "r") do io
+        open(String(datadir("flow_data", "$(h.name).json")), "r") do io
             config = read(io, String)
         end
         @info "Name already used, config is: \n $(JSON.parse(config))"
-        dl_path = datadir("flow_data", "$(h.name).nc")
+        dl_path = String(datadir("flow_data", "$(h.name).nc"))
         return (config, dl_path)
     else
         # Dowload data using query and return path to saved file
         build_api_query!(h)
         dl_path = Downloads.download(h.api_query, datadir("flow_data\\$(h.name).nc"); progress=prog_bar)
-        open(datadir("flow_data", "$(h.name).json"), "w") do io
+        open(String(datadir("flow_data", "$(h.name).json")), "w") do io
             write(io, json(h))
         end
         return (json(h), dl_path)
