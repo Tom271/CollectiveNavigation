@@ -31,16 +31,16 @@ function logmessage(flow_value, sensing_value)
     )
 end
 
-function load_HYCOM_data(file_path::String)
-    sea = matread(file_path)
-    data_name = " "
-    for i in keys(sea)
-        println(i)
-        data_name = i
-    end
-    sea = sea[data_name]
-    return sea
-end
+# function load_HYCOM_data(file_path::String)
+#     sea = matread(file_path)
+#     data_name = " "
+#     for i in keys(sea)
+#         println(i)
+#         data_name = i
+#     end
+#     sea = sea[data_name]
+#     return sea
+# end
 
 function filter_trajectories(
     lw_config::SimulationConfig;

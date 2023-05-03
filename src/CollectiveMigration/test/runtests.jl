@@ -1,13 +1,13 @@
-using AnimalNavigation, Manifolds
+using CollectiveMigration, Manifolds
 using Test
 
-@testset "AnimalNavigation.jl" begin
+@testset "CollectiveMigration.jl" begin
     # Testing resultant vector on unit circle
     same_angle = [π, π, π]
     opposite_angles = [π / 2, -π / 2]
 
-    @test AnimalNavigation.circ_resultant(same_angle) == 1
-    @test AnimalNavigation.circ_resultant(opposite_angles) < 1E-16
+    @test CollectiveMigration.circ_resultant(same_angle) == 1
+    @test CollectiveMigration.circ_resultant(opposite_angles) < 1E-16
     # Testing circular mean
     circ = Manifolds.Circle(ℝ)
     angles = [π, -π / 2]

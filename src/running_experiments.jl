@@ -93,3 +93,38 @@ function run_experiment_one_param(
     return df
 end
 
+
+function run_experiment_flow_angle(
+    default_config::SimulationConfig,
+    angle::Symbol;
+    angle_values=[0.0, 500.0],
+    show_log=true
+)
+    df = DataFrame()
+    if default_config.kappa_input === nothing || default_config.kappa_CDF === nothing
+        default_config.kappa_CDF, default_config.kappa_input = load_kappa_CDF()
+    end
+    parse_config!(default_config)
+    config = deepcopy(default_config)
+    config.save_name = ""
+    for angle_value in angle_values
+        show_log && logmessage(0.0, angle_value)
+        flow_dict = getproperty(config, :flow)
+        flow_dict["angle"] = angle_value
+        setproperty!(config, :flow, flow_dict)
+        # safe save not necessary as realisations are averaged over
+        data, file = produce_or_load(
+            String(datadir("realisation_data_angle")),
+            config,
+            run_many_realisations;
+            verbose=true
+        )
+        if angle_value == angle_values[1]
+            df = DataFrame(data)
+        else
+            append!(df, data)
+        end
+    end
+
+    return df
+end
