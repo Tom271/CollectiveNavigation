@@ -74,12 +74,18 @@ function decompress_data(compressed_df::DataFrame; show_progress::Bool=true)::Da
         sensing_type = row.lw_config.sensing["type"]
         heading_perception = row.lw_config.heading_perception["type"]
         flow_strength = row.lw_config.flow["strength"]
+        if row.lw_config.flow["type"] == "angle"
+            flow_angle = row.lw_config.flow["angle"]
+        else
+            flow_angle = nothing
+        end
         goal_tol = row.lw_config.goal["tolerance"]
         num_agents = row.lw_config.num_agents
 
         realisation_config = DataFrame(
             sensing_range=fill(sensing_range, size(row.df)[1]),
             flow_strength=fill(flow_strength, size(row.df)[1]),
+            flow_angle=fill(flow_angle, size(row.df)[1]),
             goal_tol=fill(goal_tol, size(row.df)[1]),
             num_agents=fill(num_agents, size(row.df)[1]),
             sensing_type=fill(sensing_type, size(row.df)[1]),
