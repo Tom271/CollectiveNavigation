@@ -154,19 +154,9 @@ function get_flow_function(flow::Dict{String,Any})
     flow_name = flow["type"]
     kw::Dict{Symbol,Any} = Dict()
     kw[:strength] = flow["strength"]
-    if flow_name == "angle"
-        kw[:angle] = flow["angle"]
-        strength_x = kw[:strength] * cos(kw[:angle])
-        strength_y = kw[:strength] * sin(kw[:angle])
-    else
-        strength_x = nothing
-        strength_y = nothing
-    end
-
     flow_name = lowercase(flow_name)
     flow_functions = Dict{String,Any}(
         "vortex" => (t, x, y) -> vortex_flow(t, x, y; kw...),
-        "angle" => get_flow_function([strength_x; strength_y]; kw...),
         "annulus" => (t, x, y) -> annulus_flow(t, x, y; kw...),
         "vertical_stream" => (t, x, y) -> vertical_stream(t, x, y; kw...),
         "horizontal_stream" => (t, x, y) -> horizontal_stream(t, x, y; kw...),
@@ -176,6 +166,12 @@ function get_flow_function(flow::Dict{String,Any})
         "hycom_mean" => (t, x, y) -> hycom_flow_mean(t, x, y, flow["strength"], flow["config"]),
         "hybrid" => (t, x, y) -> (1 - flow["lambda"]) * get_flow_function(flow["strength"]) + flow["lambda"] * hycom_flow(t, x, y, flow["strength"], flow["config"]),
     )
+    if flow_name == "angle"
+        kw[:angle] = flow["angle"]
+        strength_x = kw[:strength] * cos(kw[:angle])
+        strength_y = kw[:strength] * sin(kw[:angle])
+        flow_functions["angle"] = get_flow_function([strength_x; strength_y]; kw...)
+    end
     return flow_functions[flow_name]
 end
 
