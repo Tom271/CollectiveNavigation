@@ -88,7 +88,6 @@ function run_realisation(config::SimulationConfig; save_output::Bool=false)
     if kappa_input === nothing || kappa_CDF === nothing
         kappa_CDF, kappa_input = load_kappa_CDF()
     end
-    println("Inherent information strength is $(inherent_information_strength)")
 
     # should empty position matrices be generated into a dict by a function?
     # doesn't really add overhead, marginally cleaner?
