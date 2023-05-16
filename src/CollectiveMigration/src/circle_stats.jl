@@ -11,7 +11,10 @@ function circ_resultant(samples::Vector{Float64})::Float64
     return R
 end
 
-function mardia_jupp_κ_mle(headings::Vector{Float64}, weights::Vector{Float64})::Float64
+function mardia_jupp_κ_mle(
+    headings::Vector{Float64},
+    weights::Vector{Float64}
+)::Float64
     headings = headings[:]
     N = length(headings)
     if N > 1
