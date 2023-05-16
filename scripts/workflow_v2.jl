@@ -159,4 +159,3 @@ fig, ax, hm = @pipe df |>
                     make_failures_explicit(_, df, [:sensing_range, :flow_strength]) |>
                     plot_arrival_heatmap(_; save_plot=true)
 
-
