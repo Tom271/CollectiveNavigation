@@ -7,7 +7,7 @@ Base.@kwdef mutable struct SimulationConfig
     num_agents::Int = 100
     terminal_time::Float64 = 1000
     goal::Dict{String,Any} = Dict("location" => [0.0, 0.0], "tolerance" => 10.0)
-    information_field_strength::Float64 = 1.0
+    inherent_information_strength::Float64 = 1.0
     flow::Dict{String,Any} = Dict()
     sensing::Dict{String,Any} = Dict("type" => "ranged", "range" => 0.0)
     initial_condition::Dict{String,Any} = Dict("position" => "box", "heading" => "sector")
@@ -73,6 +73,7 @@ function run_realisation(config::SimulationConfig; save_output::Bool=false)
     kappa_input,
     kappa_CDF,
     initial_condition,
+    inherent_information_strength,
     goal,
     mean_run_time,
     α,
@@ -87,6 +88,7 @@ function run_realisation(config::SimulationConfig; save_output::Bool=false)
     if kappa_input === nothing || kappa_CDF === nothing
         kappa_CDF, kappa_input = load_kappa_CDF()
     end
+    println("Inherent information strength is $(inherent_information_strength)")
 
     # should empty position matrices be generated into a dict by a function?
     # doesn't really add overhead, marginally cleaner?
@@ -140,7 +142,7 @@ function run_realisation(config::SimulationConfig; save_output::Bool=false)
 
         goal_direction =
             atan(reverse(goal["location"] .- current_pos[:, agent_to_update])...)
-        updated_heading = mod(rand(rng, VonMises(goal_direction, 1)), 2π)
+        updated_heading = mod(rand(rng, VonMises(goal_direction, inherent_information_strength)), 2π)
 
         neighbours = find_neighbours(agent_to_update, current_pos)
         num_neighbours = length(neighbours)
