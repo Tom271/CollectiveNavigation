@@ -33,7 +33,7 @@ function plot_averages(
             t,
             mu_t;
             color=colors[idx],
-            label=(sr == 0.0) ? "Individual" : string(sr),
+            label=(sr == 0.0) ? "Solo" : string(Int(sr)),
             linestyle=(sr == 0.0) ? :solid : :solid)
     end
     leg = Legend(fig[1, 2], ax, "Sensing Range"; merge=true, unique=true, patchsize=(10, 0.5))
