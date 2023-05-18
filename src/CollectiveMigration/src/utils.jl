@@ -5,8 +5,8 @@ function open_save_file(save_dir, save_name)
     else
         name = save_name
     end
-    touch(save_dir * "\\$name.tsv")
-    file = open(save_dir * "\\$name.tsv", "w")
+    touch(save_dir * Base.Filesystem.path_separator * "$name.tsv")
+    file = open(save_dir * Base.Filesystem.path_separator * "$name.tsv", "w")
     return file, name
 end
 
