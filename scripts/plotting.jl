@@ -358,15 +358,16 @@ function plot_hycom_data()
     h, params = sanitise_flow_data!(params, dl_path)
 
     time_point = 1
-    worldCountries = GeoJSON.read(read("medium_custom.geo.json", String))
+    # worldCountries = GeoJSON.read(read("medium_custom.geo.json"))
     fig = Figure(resolution=(1200, 800))
-    ga = GeoMakie.GeoAxis(
-        fig[1, 1]; # any cell of the figure's layout
-        # source="+proj=longlat +datum=WGS84",
-        # lonlims ="automatic",
-        dest="+proj=longlat" # the CRS in which you want to plot
-        # coastlines=true # plot coastlines from Natural Earth, as a reference.
-    )
+    ga = Axis(fig[1, 1])
+    # GeoMakie.GeoAxis(
+    # fig[1, 1]; # any cell of the figure's layout
+    # source="+proj=longlat +datum=WGS84",
+    # lonlims ="automatic",
+    # dest="+proj=longlat" # the CRS in which you want to plot
+    # coastlines=true # plot coastlines from Natural Earth, as a reference.
+    # )
     long = h.raw[1] .- 360 # shift to align with map
     lat = h.raw[2]
     u_vel = h.raw[4][:, :, time_point]
@@ -377,23 +378,24 @@ function plot_hycom_data()
         long,
         lat,
         log.(sqrt.(u_vel .^ 2 + v_vel .^ 2));
-        colormap=colormap("Purples")
+        colormap=tol_sunset
     )
-    hm2 = poly!(
-        ga, worldCountries;
-        strokecolor=:black,
-        color=:white,
-        strokewidth=0.5
-    )
+    # hm2 = poly!(
+    #     ga, worldCountries;
+    #     strokecolor=:black,
+    #     color=:white,
+    #     strokewidth=0.5
+    # )
 
-
-    ga.xlabel = "Longitude"
-    ga.ylabel = "Latitude"
-    xlims!(0.92 * minimum(long,), 1.08 * maximum(long,))
-    ylims!(0.85 * minimum(lat,), 1.15 * maximum(lat,))
-    ga.xticks = 360 .+ round.(0.92*minimum(long,):10:1.08*maximum(long,)) # shift back coord
-    ga.xtickformat = "{:d}°"
-    ga.yticks = round.(0.85*minimum(lat,):10:1.15*maximum(lat,))
-    ga.ytickformat = "{:d}°"
+    hidedecorations!(ga)
+    # ga.xlabel = "Longitude"
+    # ga.ylabel = "Latitude"
+    # xlims!(0.92 * minimum(long,), 1.08 * maximum(long,))
+    # ylims!(0.85 * minimum(lat,), 1.15 * maximum(lat,))
+    # ga.xticks = 360 .+ round.(0.92*minimum(long,):10:1.08*maximum(long,)) # shift back coord
+    # ga.xtickformat = "{:d}°"
+    # ga.yticks = round.(0.85*minimum(lat,):10:1.15*maximum(lat,))
+    # ga.ytickformat = "{:d}°"
+    save(String(plotsdir("final", "flow.png")), fig, px_per_unit=10)
     fig
 end
