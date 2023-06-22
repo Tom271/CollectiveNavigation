@@ -7,7 +7,7 @@ Base.@kwdef mutable struct SimulationConfig
     num_agents::Int = 100
     terminal_time::Float64 = 1000
     goal::Dict{String,Any} = Dict("location" => [0.0, 0.0], "tolerance" => 10.0)
-    # inherent_information_strength::Float64 = 1.0
+    inherent_information_strength::Float64 = 1.0
     flow::Dict{String,Any} = Dict()
     sensing::Dict{String,Any} = Dict("type" => "ranged", "range" => 0.0)
     initial_condition::Dict{String,Any} = Dict("position" => "box", "heading" => "sector")
