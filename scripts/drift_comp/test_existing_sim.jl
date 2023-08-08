@@ -10,7 +10,7 @@ intend_config = SimulationConfig(
     num_repeats=3,
     flow=Dict("type" => "angle", "strength" => 0.2, "angle" => π / 2),
     sensing=Dict("type" => "ranged", "range" => 50.0),
-    heading_perception=Dict("type" => "intended"),
+    heading_perception=Dict("type" => "actual"),
     terminal_time=5000,
     χ=0,
 );
@@ -77,7 +77,7 @@ full_comp_config = SimulationConfig(
     sensing=Dict("type" => "ranged", "range" => 50.0),
     heading_perception=Dict("type" => "intended"),
     terminal_time=5000,
-    χ=1.0
+    χ=0.5
 );
 parse_config!(full_comp_config);
 full_comp_angle_flow_data = run_experiment_flow_angle(
@@ -86,7 +86,7 @@ full_comp_angle_flow_data = run_experiment_flow_angle(
     angle_values=collect(0:(π/18):(π/18)),
     show_log=true
 )
-realisation = subset(full_comp_angle_flow_data, :lw_config => ByRow(x -> (x.sensing["range"] .== 50.0) & (x.flow["angle"] == 0.0) & (x.χ == 1.0)));
+realisation = subset(full_comp_angle_flow_data, :lw_config => ByRow(x -> (x.sensing["range"] .== 50.0) & (x.flow["angle"] == 0.0) & (x.χ == 0.5)));
 ideal_config = realisation.lw_config[1];
 ideal_positions = readdlm(joinpath(ideal_config.save_dir, ideal_config.save_name * ".tsv"));
 ideal_positions[ideal_positions.==""] .= 0;
@@ -101,7 +101,7 @@ sample = 1:sample_size
 size_pt = 390 .* (1, 0.75)
 fig = Figure(resolution=size_pt)
 ax1 = CairoMakie.Axis(
-    fig[1, 1]; title=L"$\chi = 1, \kappa_1 = \kappa_2 = 1$, Intended compensating (yellow), Intended (blue)"
+    fig[1, 1]; title="Less Compensating, Some Navigation", subtitle=L"$\chi = 0.5, \kappa_1 = \kappa_2 = 1$, Ideal (yellow), $\chi=0$, Ideal(blue)"
 )
 for i in 1:5:minimum(hcat(length(ideal_y_pos[:, 1]), length(y_pos[:, 1])))
     scatter!(
@@ -138,4 +138,4 @@ hidespines!(ax1)
 ax1.aspect = DataAspect()
 
 fig
-save(String(plotsdir("test", "scatter_traj_intended_χ=1.png")), fig)
+save(String(plotsdir("test", "scatter_traj_intended_χ=0.5.png")), fig)
