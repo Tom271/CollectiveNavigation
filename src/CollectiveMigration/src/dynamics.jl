@@ -7,12 +7,14 @@ Base.@kwdef mutable struct SimulationConfig
     num_agents::Int = 100
     terminal_time::Float64 = 1000
     goal::Dict{String,Any} = Dict("location" => [0.0, 0.0], "tolerance" => 10.0)
-    inherent_information_strength::Float64 = 1.0
+    κ_1::Float64 = 1.0
+    κ_2::Float64 = 1.0
     flow::Dict{String,Any} = Dict()
     sensing::Dict{String,Any} = Dict("type" => "ranged", "range" => 0.0)
     initial_condition::Dict{String,Any} = Dict("position" => "box", "heading" => "sector")
     mean_run_time::Float64 = 1.0
     α::Float64 = 0.5
+    χ::Float64 = 0.0 #i.e. no compensation
     heading_perception::Dict{String,String} = Dict("type" => "intended")
 end
 
@@ -73,14 +75,17 @@ function run_realisation(config::SimulationConfig; save_output::Bool=false)
     kappa_input,
     kappa_CDF,
     initial_condition,
-    inherent_information_strength,
+    κ_1,
+    κ_2,
     goal,
     mean_run_time,
     α,
+    χ,
     save_dir,
     save_name = config
     rng = MersenneTwister()
     flow_at = get_flow_function(flow)
+    ζ = (flow["type"] == "angle") ? flow["angle"] : nothing
     find_neighbours = get_sensing_kernel(sensing)
     starting_num_agents = copy(num_agents)
     # This should be unnecessary when running many, but required if just
@@ -98,7 +103,7 @@ function run_realisation(config::SimulationConfig; save_output::Bool=false)
     run_times::Vector{Float64} = rand(rng, Exponential(1 / mean_run_time), num_agents)
     # TODO: create way of passing initial condition
     initial_pos, current_headings = get_initial_condition(initial_condition, num_agents)
-
+    ideal_headings = copy(current_headings)
     current_pos = copy(initial_pos)
 
     # Calculate first stats
@@ -140,19 +145,25 @@ function run_realisation(config::SimulationConfig; save_output::Bool=false)
         # current_headings[agent_to_update], avg_num_neighbours = tumble_agent(agent_to_update, current_pos, current_headings, find_neighbours, agents, domain, kappa_CDF, kappa_input, avg_num_neighbours)
 
         goal_direction =
-            atan(reverse(goal["location"] .- current_pos[:, agent_to_update])...)
-        updated_heading = mod(rand(rng, VonMises(goal_direction, inherent_information_strength)), 2π)
+            atan(reverse(goal["location"] .- current_pos[:, agent_to_update])...) # equivalent to φ
+
+        goal_heading = mod(rand(rng, VonMises(goal_direction, κ_1)), 2π)
+        compensation_heading = mod(rand(rng, VonMises(π - ζ, κ_2)), 2π)
+        updated_heading = (1 - χ) * goal_heading + χ * compensation_heading
 
         neighbours = find_neighbours(agent_to_update, current_pos)
         num_neighbours = length(neighbours)
         avg_num_neighbours += num_neighbours
         position_change = current_pos .- prev_pos
-        actual_headings = atan.(position_change[2, :], position_change[1, :])
+        actual_headings = atan.(position_change[2, :], position_change[1, :]) # also called "track"
+        ideal_headings[agent_to_update] = goal_heading
         if num_neighbours > 1
             if heading_perception["type"] == "actual"
                 neighbour_headings = actual_headings[neighbours]
             elseif heading_perception["type"] == "intended"
                 neighbour_headings = current_headings[neighbours]
+            elseif heading_perception["type"] == "ideal"
+                neighbour_headings = ideal_headings[neighbours]
             else
                 throw(DomainError(heading_perception["type"], "Invalid perception type"))
             end
