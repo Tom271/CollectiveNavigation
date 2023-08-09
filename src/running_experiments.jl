@@ -134,3 +134,43 @@ function run_experiment_flow_angle(
 
     return df
 end
+
+function run_experiment_flow_comp(
+    default_config::SimulationConfig,
+    flow_param::Symbol,
+    compensation::Symbol;
+    comp_values=[0.0, 1.0],
+    flow_values=0.0:0.1:0.1,
+    show_log=true
+)
+    df = DataFrame()
+    if default_config.kappa_input === nothing || default_config.kappa_CDF === nothing
+        default_config.kappa_CDF, default_config.kappa_input = load_kappa_CDF()
+    end
+    parse_config!(default_config)
+    for flow_value in flow_values
+        config = deepcopy(default_config)
+        config.save_name = ""
+        flow_dict = getproperty(config, flow_param)
+        flow_dict["strength"] = flow_value
+        setproperty!(config, flow_param, flow_dict)
+        for χ in comp_values
+            # short circuit
+            show_log && logmessage(flow_value, χ)
+            setproperty!(config, compensation, χ)
+
+            # safe save not necessary as realisations are averaged over
+            file, path = produce_or_load(
+                String(datadir("comp_realisation_data")),
+                config,
+                run_many_realisations;
+                verbose=false
+            )
+            if flow_value == flow_values[1] && χ == comp_values[1]
+                df = DataFrame(file)
+            else
+                append!(df, file)
+            end
+        end
+    end
+end
