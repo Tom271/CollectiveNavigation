@@ -173,4 +173,5 @@ function run_experiment_flow_comp(
             end
         end
     end
+    return df
 end
