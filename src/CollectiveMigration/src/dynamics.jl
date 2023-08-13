@@ -85,7 +85,7 @@ function run_realisation(config::SimulationConfig; save_output::Bool=false)
     save_name = config
     rng = MersenneTwister()
     flow_at = get_flow_function(flow)
-    ζ = (flow["type"] == "angle") ? flow["angle"] : nothing
+    ϑ = (flow["type"] == "angle") ? flow["angle"] : nothing
     find_neighbours = get_sensing_kernel(sensing)
     starting_num_agents = copy(num_agents)
     # This should be unnecessary when running many, but required if just
@@ -148,7 +148,11 @@ function run_realisation(config::SimulationConfig; save_output::Bool=false)
             atan(reverse(goal["location"] .- current_pos[:, agent_to_update])...) # equivalent to φ
 
         goal_heading = mod(rand(rng, VonMises(goal_direction, κ_1)), 2π)
-        compensation_heading = mod(rand(rng, VonMises(π - ζ, κ_2)), 2π)
+        if χ != 0
+            compensation_heading = mod(rand(rng, VonMises(ϑ + π, κ_2)), 2π)
+        else
+            compensation_heading = 0
+        end
         updated_heading = (1 - χ) * goal_heading + χ * compensation_heading
 
         neighbours = find_neighbours(agent_to_update, current_pos)

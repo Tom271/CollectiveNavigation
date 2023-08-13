@@ -3,7 +3,7 @@ using DrWatson
 using Pipe: @pipe
 @time using CairoMakie
 
-include("final_figures/theme.jl")
+include("../../notebooks/final_figures/theme.jl")
 # Angle Flow Intended
 intend_config = SimulationConfig(
     num_repeats=50,
