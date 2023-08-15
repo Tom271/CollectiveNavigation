@@ -4,11 +4,12 @@ DrWatson.allaccess(::SimulationConfig) = [
     "flow",
     "heading_perception",
     "num_repeats",
-    "mean_run_time",
+    # "mean_run_time",
     "num_agents",
     "terminal_time",
     "goal",
-    "initial_condition",
+    "α"
+    # "initial_condition",
 ]
 DrWatson.default_expand(::SimulationConfig) =
     ["sensing", "flow", "goal", "initial_condition", "heading_perception"]
