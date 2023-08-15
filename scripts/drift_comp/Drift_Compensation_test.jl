@@ -5,9 +5,9 @@ using Pipe: @pipe
 @time using CairoMakie
 
 include("../../notebooks/final_figures/theme.jl")
-angle = pi
+angle = 0
 h1 = "actual"
-h2 = "actual"
+h2 = h1
 ## intended without drift compensation
 intend_config = SimulationConfig(
     num_repeats=1,
@@ -168,11 +168,14 @@ intend_df = decompress_data(intend_data)
 comp_df = decompress_data(slight_comp_data)
 
 include("../../notebooks/final_figures/theme.jl")
-size_pt = (500, 275)
-fig2 = CairoMakie.Figure(resolution=size_pt)
+size_pt = 390 .* (0.75, 0.75)
+fig2 = Figure(resolution=size_pt)
 ax = Axis(fig2[1, 1]; title="ζ=$(intended_config.flow["strength"]), ϑ = $(round(intended_config.flow["angle"];digits=2))", subtitle="χ = $(intended_config.χ), $(intended_config.heading_perception["type"]) (yellow), χ=$(config.χ), $(config.heading_perception["type"]) (blue)")
-lines!(ax, intend_df[!, :coarse_time], intend_df[!, :individuals_remaining])
+lines!(ax, intend_df[!, :coarse_time], intend_df[!, :individuals_remaining]; linewidth=3)
 
-lines!(comp_df[!, :coarse_time], comp_df[!, :individuals_remaining])
+lines!(comp_df[!, :coarse_time], comp_df[!, :individuals_remaining]; linewidth=3)
 xlims!(0, 1500)
+ax.xlabel = "Time"
+ax.ylabel = "Individuals Remaining"
+save(String(plotsdir("test", "ind_rem_perc=$(intended_config.heading_perception["type"])_χ=$(intended_config.χ)_flow=$(intended_config.flow["strength"])_angle=$(intended_config.flow["angle"]).svg")), fig2)
 fig2
