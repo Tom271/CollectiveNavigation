@@ -48,11 +48,11 @@ function run_experiment(
                 run_many_realisations;
                 verbose=false
             )
-            if flow_value == flow_values[1] && sensing_value == sensing_values[1]
-                df = DataFrame(file)
-            else
-                append!(df, file)
-            end
+#            if flow_value == flow_values[1] && sensing_value == sensing_values[1]
+#                df = DataFrame(file)
+#            else
+#                append!(df, file)
+#            end
         end
     end
 
