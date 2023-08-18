@@ -88,3 +88,21 @@ function make_failures_explicit(
     full_arrival_times = @pipe arrival_times |> outerjoin(_, all_combos, on=groups)
     return full_arrival_times
 end
+
+
+"""
+    get_group_efficiency(df::DataFrame, groups::Vector{Symbol})::DataFrame
+Calculates group efficiency at each timestep
+
+After splitting into `groups`, for each trial, load the average distance to goal at each coarse time step. Then, take the average across trials and the standard deviation. 
+
+See also [`get_mean_individuals_remaining`](@ref),[`get_arrival_times`](@ref)
+"""
+function get_group_efficiency(df::AbstractDataFrame, groups::Vector{Symbol})
+    group_eff = df
+    group_eff = @pipe group_eff |>
+                      groupby(_, [groups..., :coarse_time, :heading_perception]) |>
+                      combine(_, :average_dist_to_goal => mean, :average_dist_to_goal => std => :std_dist_to_goal) |>
+                      transform(_, [:average_dist_to_goal_mean, :coarse_time] => nav_eff => :nav_eff) |>
+                      transform(_, [:average_dist_to_goal_mean, :coarse_time, :flow_strength] => flow_nav_eff => :flow_nav_eff)
+end
