@@ -79,6 +79,7 @@ function decompress_data(compressed_df::DataFrame; show_progress::Bool=true)::Da
         else
             flow_angle = nothing
         end
+        comp = row.lw_config.χ
         goal_tol = row.lw_config.goal["tolerance"]
         num_agents = row.lw_config.num_agents
 
@@ -90,7 +91,7 @@ function decompress_data(compressed_df::DataFrame; show_progress::Bool=true)::Da
             num_agents=fill(num_agents, size(row.df)[1]),
             sensing_type=fill(sensing_type, size(row.df)[1]),
             heading_perception=fill(heading_perception, size(row.df)[1]),
-        )
+            χ=fill(comp, size(row.df)[1]),)
         temp = hcat(row.df, realisation_config)
         if i == 1
             df = temp

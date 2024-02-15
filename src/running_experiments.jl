@@ -4,11 +4,14 @@ DrWatson.allaccess(::SimulationConfig) = [
     "flow",
     "heading_perception",
     "num_repeats",
-    "mean_run_time",
+    # "mean_run_time",
     "num_agents",
     "terminal_time",
     "goal",
-    "initial_condition",
+    # "initial_condition",
+    "χ",
+    "κ_1",
+    "κ_2"
 ]
 DrWatson.default_expand(::SimulationConfig) =
     ["sensing", "flow", "goal", "initial_condition", "heading_perception"]
@@ -113,8 +116,11 @@ function run_experiment_flow_angle(
         flow_dict["angle"] = angle_value
         setproperty!(config, :flow, flow_dict)
         # safe save not necessary as realisations are averaged over
+        # Need an ugly adjustment to catch old filenames,
+        # i.e. containing initial_condition and mean_run_time, no chi or kappa.
+
         data, file = produce_or_load(
-            String(datadir("realisation_data_angle")),
+            String(datadir("realisation_data_comp")),
             config,
             run_many_realisations;
             verbose=true
@@ -126,5 +132,46 @@ function run_experiment_flow_angle(
         end
     end
 
+    return df
+end
+
+function run_experiment_flow_comp(
+    default_config::SimulationConfig,
+    flow_param::Symbol,
+    compensation::Symbol;
+    comp_values=[0.0, 1.0],
+    flow_values=0.0:0.1:0.1,
+    show_log=true
+)
+    df = DataFrame()
+    if default_config.kappa_input === nothing || default_config.kappa_CDF === nothing
+        default_config.kappa_CDF, default_config.kappa_input = load_kappa_CDF()
+    end
+    parse_config!(default_config)
+    for flow_value in flow_values
+        config = deepcopy(default_config)
+        config.save_name = ""
+        flow_dict = getproperty(config, flow_param)
+        flow_dict["strength"] = flow_value
+        setproperty!(config, flow_param, flow_dict)
+        for χ in comp_values
+            # short circuit
+            show_log && logmessage(flow_value, χ)
+            setproperty!(config, compensation, χ)
+
+            # safe save not necessary as realisations are averaged over
+            file, path = produce_or_load(
+                String(datadir("comp_realisation_data")),
+                config,
+                run_many_realisations;
+                verbose=false
+            )
+            if flow_value == flow_values[1] && χ == comp_values[1]
+                df = DataFrame(file)
+            else
+                append!(df, file)
+            end
+        end
+    end
     return df
 end
